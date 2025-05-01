@@ -1,8 +1,9 @@
 'use strict';
 
-class RaceMap {
-    static #SHADER_FRAGMENT = './glsl/map.frag';
-    static #SHADER_VERTEX = './glsl/map.vert';
+class Garden {
+    static #ATTRIBUTES = ['position'];
+    static #SHADER_FRAGMENT = './glsl/garden.frag';
+    static #SHADER_VERTEX = './glsl/garden.vert';
     static #UNIFORMS = {
        projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
        camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
@@ -18,16 +19,33 @@ class RaceMap {
 
     #gl;
     #renderer;
+    #array;
 
     constructor(gl) {
         this.#gl = gl;
         return (async () => {
-            this.#renderer = await new Renderer(this.#gl, RaceMap.#SHADER_VERTEX, RaceMap.#SHADER_FRAGMENT,
-                    RaceMap.#UNIFORMS, []);
+            this.#renderer = await new Renderer(this.#gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
+                    Garden.#UNIFORMS, Garden.#ATTRIBUTES);
+            this.#array = this.#gl.createVertexArray();
+            this.#gl.bindVertexArray(this.#array);
+            const positions = this.#gl.createBuffer();
+            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, positions);
+            this.#gl.bufferData(this.#gl.ARRAY_BUFFER, new Float32Array([
+                0.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 0.0, -1.0,
+                1.0, 0.0, -1.0
+            ]), this.#gl.STATIC_DRAW);
+            this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
+            this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
+
             // TODO refactor
             const indices = this.#gl.createBuffer();
             this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices);
-            this.#gl.bufferData(this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2]), this.#gl.STATIC_DRAW);
+            this.#gl.bufferData(this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
+                0, 1, 2,
+                2, 1, 3]), this.#gl.STATIC_DRAW);
+            this.#gl.bindVertexArray(null);
             return this;
         })();
     }
@@ -43,11 +61,7 @@ class RaceMap {
         // TODO render
 
 
-        this.#gl.drawArraysInstanced(
-          this.#gl.TRIANGLES,
-          0,             // offset
-          3,   // num vertices per instance
-          5,  // num instances
-        );
+        this.#gl.bindVertexArray(this.#array);
+        this.#gl.drawElements(this.#gl.TRIANGLES, 6, this.#gl.UNSIGNED_SHORT, 0); // TODO byte
     }
 }

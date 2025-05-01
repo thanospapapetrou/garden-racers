@@ -32,7 +32,7 @@ class GardenRacers {
     };
 
     #gl;
-    #map;
+    #garden;
     #azimuth;
     #elevation;
     #distance;
@@ -50,7 +50,7 @@ class GardenRacers {
     constructor(gl) {
         this.#gl = gl;
         return (async () => {
-            this.#map = await new RaceMap(this.#gl);
+            this.#garden = await new Garden(this.#gl);
             this.azimuth = 0.0;
             this.elevation = 0.0;
             this.distance = GardenRacers.#DISTANCE.max;
@@ -142,7 +142,7 @@ class GardenRacers {
     render(time) {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
-        this.#map.render(this.#projection, this.#camera, this.#model);
+        this.#garden.render(this.#projection, this.#camera, this.#model);
         requestAnimationFrame(this.render.bind(this));
     }
 
