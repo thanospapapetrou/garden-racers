@@ -30,13 +30,18 @@ class Garden {
             const garden = await(await GardenRacers.load(url)).json();
             const foo = [];
             const bar = [];
-            for (let i = 0; i < garden.latitude; i++) {
-                foo.push(
-                    i, 0.0, 0.0,
-                    i + 1, 0.0, 0.0,
-                    i, 0.0, -1.0
-                );
-                bar.push(i * garden.latitude, i * garden.latitude + 1, i * garden.latitude + 2);
+            for (let latitude = 0; latitude < garden.latitude; latitude++) {
+                for (let longitude = 0; longitude < garden.longitude; longitude++) {
+                    foo.push(
+                        longitude, 0.0, -latitude,
+                        longitude + 1, 0.0, -latitude,
+                        longitude, 0.0, -latitude - 1.0
+                    );
+                    bar.push(
+                        latitude * garden.longitude * 3 + longitude * 3,
+                        latitude * garden.longitude * 3 + longitude * 3 + 1,
+                        latitude * garden.longitude * 3 + longitude * 3 + 2);
+                }
             }
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
@@ -60,8 +65,6 @@ class Garden {
         this.#renderer.uniforms.light.directional.color = [0.75, 0.75, 0.75]; // 75% white TODO
         this.#renderer.uniforms.light.directional.direction = [-1.0, -1.0, -1.0]; //  TODO
         // TODO render
-
-
         this.#gl.bindVertexArray(this.#array);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_SHORT, 0);
     }
