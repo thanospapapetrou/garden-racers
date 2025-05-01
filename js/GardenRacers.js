@@ -10,6 +10,7 @@ class GardenRacers {
         min: 0.5, // 0.5 m
         max: 50.0 // 50 m
     };
+    static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
     static #FORMAT_DISTANCE = (distance) => `${distance} m`;
     static #MS_PER_S = 1000; // 1 s = 1000 ms
@@ -43,14 +44,22 @@ class GardenRacers {
 
     static async main() {
         const gl = document.querySelector(GardenRacers.#SELECTOR_CANVAS).getContext(GardenRacers.#CONTEXT);
-        const racers = await new GardenRacers(gl);
+        const racers = await new GardenRacers(gl, './json/garden.json');
         requestAnimationFrame(racers.render.bind(racers));
     }
 
-    constructor(gl) {
+    static async load(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(Carousel.#ERROR_LOADING(url, response.status));
+        }
+        return response;
+    }
+
+    constructor(gl, garden) {
         this.#gl = gl;
         return (async () => {
-            this.#garden = await new Garden(this.#gl);
+            this.#garden = await new Garden(this.#gl, garden);
             this.azimuth = 0.0;
             this.elevation = 0.0;
             this.distance = GardenRacers.#DISTANCE.max;

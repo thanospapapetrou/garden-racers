@@ -20,29 +20,33 @@ class Garden {
     #gl;
     #renderer;
     #array;
+    #count;
 
-    constructor(gl) {
+    constructor(gl, url) {
         this.#gl = gl;
         return (async () => {
             this.#renderer = await new Renderer(this.#gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES);
+            const garden = await(await GardenRacers.load(url)).json();
+            const foo = [];
+            const bar = [];
+            for (let i = 0; i < garden.latitude; i++) {
+                foo.push(
+                    i, 0.0, 0.0,
+                    i + 1, 0.0, 0.0,
+                    i, 0.0, -1.0
+                );
+                bar.push(i * garden.latitude, i * garden.latitude + 1, i * garden.latitude + 2);
+            }
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
-            new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array([
-                0.0, 0.0, 0.0,
-                1.0, 0.0, 0.0,
-                0.0, 0.0, -1.0,
-                1.0, 0.0, -1.0
-            ]));
+            new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(foo));
             this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
             this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
-
             // TODO refactor
-            new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
-                0, 1, 2,
-                2, 1, 3
-            ]));
+            new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bar));
             this.#gl.bindVertexArray(null);
+            this.#count = bar.length;
             return this;
         })();
     }
@@ -59,6 +63,6 @@ class Garden {
 
 
         this.#gl.bindVertexArray(this.#array);
-        this.#gl.drawElements(this.#gl.TRIANGLES, 6, this.#gl.UNSIGNED_SHORT, 0); // TODO byte
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_SHORT, 0);
     }
 }

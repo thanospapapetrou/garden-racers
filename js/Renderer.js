@@ -4,7 +4,6 @@ class Renderer {
     static #DELIMITER = '.';
     static #ERROR_COMPILING = (type, url, info) => `Error compiling ${(type == WebGLRenderingContext.VERTEX_SHADER) ? 'vertex' : 'fragment'} shader ${url}: ${info}`;
     static #ERROR_LINKING = (vertex, fragment, info) => `Error linking program (${vertex}, ${fragment}): ${info}`;
-    static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #TYPE_FUNCTION = 'function';
 
     #gl;
@@ -49,7 +48,7 @@ class Renderer {
 
     async #compile(url, type) {
         const shader = this.#gl.createShader(type);
-        this.#gl.shaderSource(shader, await this.#load(url));
+        this.#gl.shaderSource(shader, await (await GardenRacers.load(url)).text());
         this.#gl.compileShader(shader);
         if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
             const info = this.#gl.getShaderInfoLog(shader);
@@ -57,14 +56,6 @@ class Renderer {
             throw new Error(Renderer.#ERROR_COMPILING(type, url, info))
         }
         return shader;
-    }
-
-    async #load(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(Carousel.#ERROR_LOADING(url, response.status));
-        }
-        return response.text();
     }
 
     #resolveUniforms(prefix, uniforms) {
