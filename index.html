@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Garden Racers</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="./css/garden-racers.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+                integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+                crossorigin="anonymous" defer></script>
+        <script src="./js/GardenRacers.js"></script>
+        <script src="./js/RaceMap.js"></script>
+        <script src="./js/Renderer.js"></script>
+    </head>
+    <body onload="GardenRacers.main();">
+        <h1>GardenRacers</h1>
+        <canvas id="gardenRacers" width="750" height="450" tabindex="0"></canvas>
+        <p>Azimuth: <span id="azimuth">&nbsp;</span></p>
+        <p>Elevation: <span id="elevation">&nbsp;</span></p>
+        <p>Distance: <span id="distance">&nbsp;</span></p>
+        <p>FPS: <span id="fps">0</span></p>
+    </body>
+</html>
