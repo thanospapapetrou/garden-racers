@@ -7,8 +7,19 @@ uniform mat4 model;
 in vec3 position;
 
 out vec3 vertexNormal;
+out vec4 vertexColor;
 
 void main(void) {
-  gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
-  vertexNormal = vec3(0.0, 1.0, 0.0);
+    gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
+    vertexNormal = vec3(0.0, 1.0, 0.0); // TODO up
+    switch (gl_VertexID % 3) {
+    case 0:
+        vertexColor = vec4(1.0, 0.0, 0.0, 1.0); // TODO red
+        break;
+    case 1:
+        vertexColor = vec4(0.0, 1.0, 0.0, 1.0); // TODO green
+        break;
+    case 2:
+        vertexColor = vec4(0.0, 0.0, 1.0, 1.0); // TODO blue
+    }
 }
