@@ -28,23 +28,20 @@ class Garden {
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES);
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
-            const positions = this.#gl.createBuffer();
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, positions);
-            this.#gl.bufferData(this.#gl.ARRAY_BUFFER, new Float32Array([
+            new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array([
                 0.0, 0.0, 0.0,
                 1.0, 0.0, 0.0,
                 0.0, 0.0, -1.0,
                 1.0, 0.0, -1.0
-            ]), this.#gl.STATIC_DRAW);
+            ]));
             this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
             this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
 
             // TODO refactor
-            const indices = this.#gl.createBuffer();
-            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices);
-            this.#gl.bufferData(this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
+            new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
                 0, 1, 2,
-                2, 1, 3]), this.#gl.STATIC_DRAW);
+                2, 1, 3
+            ]));
             this.#gl.bindVertexArray(null);
             return this;
         })();
