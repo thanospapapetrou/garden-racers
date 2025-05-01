@@ -4,15 +4,19 @@ uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 model;
 
-in vec4 position;
-in vec3 normal;
-in vec4 color;
-
 out vec3 vertexNormal;
-out vec4 vertexColor;
 
 void main(void) {
+    vec4 position;
+    if (gl_VertexID == 0) {
+        position = vec4(float(gl_InstanceID), 0.0, 0.0, 1.0);
+    } else if (gl_VertexID == 1) {
+        position = vec4(float(gl_InstanceID + 1), 0.0, 0.0, 1.0);
+    } else if (gl_VertexID == 2) {
+        position = vec4(float(gl_InstanceID), 0.0, -1.0, 1.0);
+    }
+    //gl_InstanceID
+    //gl_VertexID
   gl_Position = projection * inverse(camera) * model * position;
-  vertexNormal = mat3(transpose(inverse(model))) * normal;
-  vertexColor = color;
+  vertexNormal = vec3(0.0, 1.0, 0.0);
 }

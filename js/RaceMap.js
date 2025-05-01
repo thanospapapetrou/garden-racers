@@ -1,7 +1,6 @@
 'use strict';
 
 class RaceMap {
-    static #ATTRIBUTES = ['position', 'normal', 'color'];
     static #SHADER_FRAGMENT = './glsl/map.frag';
     static #SHADER_VERTEX = './glsl/map.vert';
     static #UNIFORMS = {
@@ -24,7 +23,11 @@ class RaceMap {
         this.#gl = gl;
         return (async () => {
             this.#renderer = await new Renderer(this.#gl, RaceMap.#SHADER_VERTEX, RaceMap.#SHADER_FRAGMENT,
-                    RaceMap.#UNIFORMS, RaceMap.#ATTRIBUTES);
+                    RaceMap.#UNIFORMS, []);
+            // TODO refactor
+            const indices = this.#gl.createBuffer();
+            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices);
+            this.#gl.bufferData(this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2]), this.#gl.STATIC_DRAW);
             return this;
         })();
     }
@@ -38,6 +41,13 @@ class RaceMap {
         this.#renderer.uniforms.light.directional.color = [0.75, 0.75, 0.75]; // 75% white TODO
         this.#renderer.uniforms.light.directional.direction = [-1.0, -1.0, -1.0]; //  TODO
         // TODO render
-        this.#gl.drawElements(this.#gl.TRIANGLES, 5, this.#gl.UNSIGNED_SHORT, 0); // TODO byte
+
+
+        this.#gl.drawArraysInstanced(
+          this.#gl.TRIANGLES,
+          0,             // offset
+          3,   // num vertices per instance
+          5,  // num instances
+        );
     }
 }
