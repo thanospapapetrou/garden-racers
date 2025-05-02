@@ -76,7 +76,6 @@ class Garden {
                     altitude = (garden.altitudes[north * garden.longitude + long]
                             + garden.altitudes[south * garden.longitude + long]) / 2.0;
                 } else { // on parallel and on meridian; average all directions
-                    console.log(north + ' ' + south + ' ' + east + ' ' + west);
                     altitude = (garden.altitudes[north * garden.longitude + east]
                             + garden.altitudes[south * garden.longitude + east]
                             + garden.altitudes[south * garden.longitude + west]
