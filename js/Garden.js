@@ -81,7 +81,7 @@ class Garden {
                             + garden.altitudes[south * garden.longitude + west]
                             + garden.altitudes[north * garden.longitude + west]) / 4.0;
                 }
-                positions.push(longitude / 2.0, altitude, -latitude / 2.0);
+                positions.push(longitude / 2.0, latitude / 2.0, altitude);
             }
         }
         return positions;

@@ -8,7 +8,7 @@ class GardenRacers {
     };
     static #DISTANCE = {
         min: 0.5, // 0.5 m
-        max: 50.0 // 50 m
+        max: 10.0 // 10 m
     };
     static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
@@ -100,7 +100,7 @@ class GardenRacers {
     }
 
     set elevation(elevation) {
-        this.#elevation = Math.min(Math.max(elevation, -Math.PI / 2), Math.PI / 2);
+        this.#elevation = Math.min(Math.max(elevation, 0), Math.PI / 2);
         document.querySelector(GardenRacers.#SELECTOR_ELEVATION).firstChild.nodeValue =
                 GardenRacers.#FORMAT_ANGLE(this.#elevation);
     }
@@ -174,8 +174,8 @@ class GardenRacers {
 
     get #camera() {
         const camera = mat4.create();
-        mat4.rotateY(camera, camera, -this.azimuth);
-        mat4.rotateX(camera, camera, -this.elevation);
+        mat4.rotateZ(camera, camera, -this.azimuth);
+        mat4.rotateX(camera, camera, Math.PI / 2 - this.elevation);
         mat4.translate(camera, camera, [0.0, 0.0, this.distance]);
         return camera;
     }
