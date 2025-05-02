@@ -62,26 +62,33 @@ class Garden {
             for (let longitude = 0; longitude < 2 * garden.longitude + 1; longitude++) {
                 const lat = Math.floor((latitude - 1) / 2);
                 const long = Math.floor((longitude - 1) / 2);
+                const north = Math.min(lat + 1, garden.latitude - 1);
+                const east = Math.min(long + 1, garden.longitude - 1);
+                const south = Math.max(lat, 0);
+                const west = Math.max(long, 0);
                 let altitude = 0.0;
-                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // center
+                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
                     altitude = garden.altitudes[lat * garden.longitude + long];
-                } else if (latitude % 2 == 1) { // average east and west
-                    altitude = (garden.altitudes[lat * garden.longitude + Math.min(long + 1, garden.longitude - 1)]
-                            + garden.altitudes[lat * garden.longitude + Math.max(long, 0)]) / 2.0;
-                } else if (longitude % 2 == 1) { // average north and south
-                    altitude = (garden.altitudes[Math.min(lat + 1, garden.latitude - 1) * garden.longitude + long]
-                            + garden.altitudes[Math.max(lat, 0) * garden.longitude + long]) / 2.0;
-                } else { // average all directions
-                    altitude = (garden.altitudes[Math.min(lat + 1, garden.latitude - 1) * garden.longitude + Math.max(long, 0)]
-                            + garden.altitudes[Math.max(lat, 0) * garden.longitude + Math.min(long + 1, garden.longitude - 1)]
-                            + garden.altitudes[Math.max(lat, 0) * garden.longitude + Math.max(long, 0)]
-                            + garden.altitudes[Math.max(lat, 0) * garden.longitude + Math.max(long, 0)]) / 4.0;
+                } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
+                    altitude = (garden.altitudes[lat * garden.longitude + east]
+                            + garden.altitudes[lat * garden.longitude + west]) / 2.0;
+                } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
+                    altitude = (garden.altitudes[north * garden.longitude + long]
+                            + garden.altitudes[south * garden.longitude + long]) / 2.0;
+                } else { // on parallel and on meridian; average all directions
+                    console.log(north + ' ' + south + ' ' + east + ' ' + west);
+                    altitude = (garden.altitudes[north * garden.longitude + east]
+                            + garden.altitudes[south * garden.longitude + east]
+                            + garden.altitudes[south * garden.longitude + west]
+                            + garden.altitudes[north * garden.longitude + west]) / 4.0;
                 }
                 positions.push(longitude / 2.0, altitude, -latitude / 2.0);
             }
         }
         return positions;
     }
+
+    // TODO normals
 
     #indices(garden) {
         const indices = [];
