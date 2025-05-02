@@ -12,7 +12,7 @@ out vec4 vertexColor;
 void main(void) {
     gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
     vertexNormal = vec3(0.0, 1.0, 0.0); // TODO up
-    switch (gl_VertexID % 3) {
+    switch (gl_VertexID / 3 % 4) {
     case 0:
         vertexColor = vec4(1.0, 0.0, 0.0, 1.0); // TODO red
         break;
@@ -21,5 +21,8 @@ void main(void) {
         break;
     case 2:
         vertexColor = vec4(0.0, 0.0, 1.0, 1.0); // TODO blue
+        break;
+    case 3:
+        vertexColor = vec4(1.0, 1.0, 0.0, 1.0); // TODO yellow
     }
 }

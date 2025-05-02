@@ -28,30 +28,40 @@ class Garden {
             this.#renderer = await new Renderer(this.#gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES);
             const garden = await(await GardenRacers.load(url)).json();
-            const foo = [];
-            const bar = [];
+            const positions = [];
+            for (let latitude = 0; latitude < 2 * garden.latitude + 1; latitude++) {
+                for (let longitude = 0; longitude < 2 * garden.longitude + 1; longitude++) {
+                    positions.push(longitude / 2, 0.0, -latitude / 2);
+                }
+            }
+            const indices = [];
+            const n = 2 * garden.longitude + 1;
             for (let latitude = 0; latitude < garden.latitude; latitude++) {
                 for (let longitude = 0; longitude < garden.longitude; longitude++) {
-                    foo.push(
-                        longitude, 0.0, -latitude,
-                        longitude + 1, 0.0, -latitude,
-                        longitude, 0.0, -latitude - 1.0
-                    );
-                    bar.push(
-                        latitude * garden.longitude * 3 + longitude * 3,
-                        latitude * garden.longitude * 3 + longitude * 3 + 1,
-                        latitude * garden.longitude * 3 + longitude * 3 + 2);
+                    const lat = 2 * latitude + 1;
+                    const long = 2 * longitude + 1;
+                    const north = Direction.N(lat, long).lat * n + Direction.N(lat, long).long;
+                    const northEast = Direction.NE(lat, long).lat * n + Direction.NE(lat, long).long;
+                    const center = lat * n + long;
+                    for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
+                        const dir = Object.values(Direction)[direction](lat, long);
+                        const nextDir = Object.values(Direction)[(direction + 1) % Object.keys(Direction).length](lat, long);
+                        indices.push(dir.lat * n + dir.long,
+                            lat * n + long,
+                            nextDir.lat * n + nextDir.long
+                        );
+                    }
                 }
             }
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
-            new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(foo));
+            new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(positions));
             this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
             this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
             // TODO refactor
-            new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bar));
+            new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices));
             this.#gl.bindVertexArray(null);
-            this.#count = bar.length;
+            this.#count = indices.length;
             return this;
         })();
     }
