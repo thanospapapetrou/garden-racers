@@ -11,5 +11,6 @@ class RenderingData {
         this.#buffer = gl.createBuffer();
         gl.bindBuffer(type, this.#buffer);
         gl.bufferData(type, data, gl.STATIC_DRAW);
+        gl.bindBuffer(type, null);
     }
 }

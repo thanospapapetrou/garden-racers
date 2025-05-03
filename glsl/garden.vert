@@ -5,13 +5,14 @@ uniform mat4 camera;
 uniform mat4 model;
 
 in vec3 position;
+in vec3 normal;
 
 out vec3 vertexNormal;
 out vec4 vertexColor;
 
 void main(void) {
     gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
-    vertexNormal = vec3(0.0, 1.0, 0.0); // TODO up
+    vertexNormal = mat3(transpose(inverse(model))) * normal;
     switch (gl_VertexID % 7) {
     case 0:
         vertexColor = vec4(1.0, 0.0, 0.0, 1.0); // TODO red
