@@ -21,17 +21,13 @@ class Garden {
 
     constructor(gl, url) {
         return (async () => {
-            const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
-                    Garden.#UNIFORMS, Garden.#ATTRIBUTES);
             const garden = await(await GardenRacers.load(url)).json();
-
-
             const positions = this.#positions(garden);
-            const positionData = new AttributeData(gl, positions);
-            const normalData = new AttributeData(gl, this.#normals(garden, positions));
-            const indices = this.#indices(garden);
-            const indexData = new IndexData(gl, indices);
-            this.#task = new RenderingTask(gl, renderer, {position: positionData, normal: normalData}, indexData);
+            this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
+                    Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
+                        position: new AttributeData(gl, positions),
+                        normal: new AttributeData(gl, this.#normals(garden, positions))
+                    }, new IndexData(gl, this.#indices(garden)));
             return this;
         })();
     }
