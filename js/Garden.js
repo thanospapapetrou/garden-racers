@@ -17,17 +17,17 @@ class Garden {
         }
     };
 
+    #garden;
     #task;
 
     constructor(gl, url) {
         return (async () => {
-            const garden = await(await GardenRacers.load(url)).json();
-            const positions = this.#positions(garden);
+            this.#garden = await(await GardenRacers.load(url)).json();
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
-                        position: new AttributeData(gl, positions),
-                        normal: new AttributeData(gl, this.#normals(garden, positions))
-                    }, new IndexData(gl, this.#indices(garden)));
+                        position: new AttributeData(gl, this.#positions),
+                        normal: new AttributeData(gl, this.#normals)
+                    }, new IndexData(gl, this.#indices));
             return this;
         })();
     }
@@ -36,30 +36,30 @@ class Garden {
         this.#task.render({projection, camera, model});
     }
 
-    #positions(garden) {
+    get #positions() {
         const positions = [];
-        for (let latitude = 0; latitude < 2 * garden.latitude + 1; latitude++) {
-            for (let longitude = 0; longitude < 2 * garden.longitude + 1; longitude++) {
+        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const lat = Math.floor((latitude - 1) / 2);
                 const long = Math.floor((longitude - 1) / 2);
-                const north = Math.min(lat + 1, garden.latitude - 1);
-                const east = Math.min(long + 1, garden.longitude - 1);
+                const north = Math.min(lat + 1, this.#garden.latitude - 1);
+                const east = Math.min(long + 1, this.#garden.longitude - 1);
                 const south = Math.max(lat, 0);
                 const west = Math.max(long, 0);
                 let altitude = 0.0;
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
-                    altitude = garden.altitudes[lat * garden.longitude + long];
+                    altitude = this.#garden.altitudes[lat * this.#garden.longitude + long];
                 } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
-                    altitude = (garden.altitudes[lat * garden.longitude + east]
-                            + garden.altitudes[lat * garden.longitude + west]) / 2.0;
+                    altitude = (this.#garden.altitudes[lat * this.#garden.longitude + east]
+                            + this.#garden.altitudes[lat * this.#garden.longitude + west]) / 2.0;
                 } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
-                    altitude = (garden.altitudes[north * garden.longitude + long]
-                            + garden.altitudes[south * garden.longitude + long]) / 2.0;
+                    altitude = (this.#garden.altitudes[north * this.#garden.longitude + long]
+                            + this.#garden.altitudes[south * this.#garden.longitude + long]) / 2.0;
                 } else { // on parallel and on meridian; average all directions
-                    altitude = (garden.altitudes[north * garden.longitude + east]
-                            + garden.altitudes[south * garden.longitude + east]
-                            + garden.altitudes[south * garden.longitude + west]
-                            + garden.altitudes[north * garden.longitude + west]) / 4.0;
+                    altitude = (this.#garden.altitudes[north * this.#garden.longitude + east]
+                            + this.#garden.altitudes[south * this.#garden.longitude + east]
+                            + this.#garden.altitudes[south * this.#garden.longitude + west]
+                            + this.#garden.altitudes[north * this.#garden.longitude + west]) / 4.0;
                 }
                 positions.push(longitude / 2.0, latitude / 2.0, altitude);
             }
@@ -67,29 +67,29 @@ class Garden {
         return positions;
     }
 
-    #normals(garden, positions) {
+    get #normals() {
         const normals = [];
-        for (let latitude = 0; latitude < 2 * garden.latitude + 1; latitude++) {
-            for (let longitude = 0; longitude < 2 * garden.longitude + 1; longitude++) {
+        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-                    const center = latitude * garden.longitude + longitude;
-                    const north = (latitude + 1) * garden.longitude + longitude;
-                    const northEast = (latitude + 1) * garden.longitude + longitude + 1;
-                    const east = latitude * garden.longitude + longitude + 1;
-                    const southEast = (latitude - 1) * garden.longitude + longitude + 1;
-                    const south = (latitude - 1) * garden.longitude + longitude;
-                    const southWest = (latitude - 1) * garden.longitude + longitude - 1;
-                    const west = latitude * garden.longitude + longitude - 1;
-                    const northWest = (latitude + 1) * garden.longitude + longitude - 1;
-                    const c = this.#getPosition(positions, center);
-                    const n = this.#getPosition(positions, north);
-                    const ne = this.#getPosition(positions, northEast);
-                    const e = this.#getPosition(positions, east);
-                    const se = this.#getPosition(positions, southEast);
-                    const s = this.#getPosition(positions, south);
-                    const sw = this.#getPosition(positions, southWest);
-                    const w = this.#getPosition(positions, west);
-                    const nw = this.#getPosition(positions, northWest);
+                    const center = latitude * this.#garden.longitude + longitude;
+                    const north = (latitude + 1) * this.#garden.longitude + longitude;
+                    const northEast = (latitude + 1) * this.#garden.longitude + longitude + 1;
+                    const east = latitude * this.#garden.longitude + longitude + 1;
+                    const southEast = (latitude - 1) * this.#garden.longitude + longitude + 1;
+                    const south = (latitude - 1) * this.#garden.longitude + longitude;
+                    const southWest = (latitude - 1) * this.#garden.longitude + longitude - 1;
+                    const west = latitude * this.#garden.longitude + longitude - 1;
+                    const northWest = (latitude + 1) * this.#garden.longitude + longitude - 1;
+                    const c = this.#getPosition(this.#positions, center);
+                    const n = this.#getPosition(this.#positions, north);
+                    const ne = this.#getPosition(this.#positions, northEast);
+                    const e = this.#getPosition(this.#positions, east);
+                    const se = this.#getPosition(this.#positions, southEast);
+                    const s = this.#getPosition(this.#positions, south);
+                    const sw = this.#getPosition(this.#positions, southWest);
+                    const w = this.#getPosition(this.#positions, west);
+                    const nw = this.#getPosition(this.#positions, northWest);
                     const normal = this.#average(this.#normal(n, c, ne),
                             this.#normal(ne, c, e),
                             this.#normal(e, c, se),
@@ -112,11 +112,11 @@ class Garden {
         return normals;
     }
 
-    #indices(garden) {
+    get #indices() {
         const indices = [];
-        const n = 2 * garden.longitude + 1;
-        for (let latitude = 0; latitude < garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < garden.longitude; longitude++) {
+        const n = 2 * this.#garden.longitude + 1;
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 const lat = 2 * latitude + 1;
                 const long = 2 * longitude + 1;
                 for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
