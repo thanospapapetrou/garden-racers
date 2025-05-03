@@ -7,18 +7,25 @@ class GardenRacers {
         depth: 1.0 // max
     };
     static #DISTANCE = {
-        min: 0.5, // 0.5 m
+        min: 0.1, // 0.1 m
         max: 10.0 // 10 m
     };
     static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
     static #FORMAT_DISTANCE = (distance) => `${distance} m`;
+    static #LIGHT = {
+        ambient: [0.25, 0.25, 0.25], // 25% white
+        directional: {
+            color: [0.75, 0.75, 0.75], // 75% white
+            direction: [-1.0, -1.0, -1.0] //  TODO should this be negative and describe
+        }
+    };
     static #MS_PER_S = 1000; // 1 s = 1000 ms
     static #PROJECTION = {
         fieldOfView: 1.57079632679, // π/2 rad
         z: {
             near: 0.1, // 0.1 m
-            far: 100.0 // 100 m
+            far: 180.312229203 // ~ 180 m; based on max garden diagonal
         }
     };
     static #SELECTOR_AZIMUTH = 'span#azimuth';
@@ -151,7 +158,7 @@ class GardenRacers {
     render(time) {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
-        this.#garden.render(this.#projection, this.#camera, this.#model);
+        this.#garden.render(this.#projection, this.#camera, this.#model, GardenRacers.#LIGHT);
         requestAnimationFrame(this.render.bind(this));
     }
 
@@ -167,8 +174,8 @@ class GardenRacers {
     get #projection() {
         const projection = mat4.create();
         mat4.perspective(projection, GardenRacers.#PROJECTION.fieldOfView,
-                this.#gl.canvas.clientWidth / this.#gl.canvas.clientHeight, GardenRacers.#PROJECTION.z.near,
-                GardenRacers.#PROJECTION.z.far);
+                this.#gl.canvas.clientWidth / this.#gl.canvas.clientHeight,
+                GardenRacers.#PROJECTION.z.near, GardenRacers.#PROJECTION.z.far);
         return projection;
     }
 
@@ -180,7 +187,7 @@ class GardenRacers {
         return camera;
     }
 
-    get #model() {
+    get #model() { // TODO this is not required
         return mat4.create();
     }
 }

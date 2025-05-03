@@ -32,8 +32,8 @@ class Garden {
         })();
     }
 
-    render(projection, camera, model) {
-        this.#task.render({projection, camera, model});
+    render(projection, camera, model, light) {
+        this.#task.render({projection, camera, model, light});
     }
 
     get #positions() {
