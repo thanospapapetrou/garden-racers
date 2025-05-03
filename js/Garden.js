@@ -29,28 +29,31 @@ class Garden {
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES);
             const garden = await(await GardenRacers.load(url)).json();
 
+
+            const positions = this.#positions(garden);
+            const positionBuffer = new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(positions))
+            const normalBuffer = new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(this.#normals(garden, positions)));
+            const indices = this.#indices(garden);
+            const indexBuffer = new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices));
+
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
 
-            const positions = this.#positions(garden);
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER,
-                new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(positions)).buffer);
+            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, positionBuffer.buffer);
             this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
             this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
             this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, null);
 
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER,
-                new RenderingData(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(this.#normals(garden, positions))).buffer);
+            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, normalBuffer.buffer);
             this.#gl.vertexAttribPointer(this.#renderer.attributes.normal, 3, gl.FLOAT, false, 0, 0);
             this.#gl.enableVertexAttribArray(this.#renderer.attributes.normal);
             this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, null);
 
-            // TODO refactor
-            const indices = this.#indices(garden);
-            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER,
-                    new RenderingData(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices)).buffer);
+            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+
             this.#gl.bindVertexArray(null);
             this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, null);
+
             this.#count = indices.length;
             return this;
         })();
