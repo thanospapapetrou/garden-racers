@@ -39,15 +39,8 @@ class Garden {
             this.#array = this.#gl.createVertexArray();
             this.#gl.bindVertexArray(this.#array);
 
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, positionData.buffer);
-            this.#gl.vertexAttribPointer(this.#renderer.attributes.position, 3, gl.FLOAT, false, 0, 0);
-            this.#gl.enableVertexAttribArray(this.#renderer.attributes.position);
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, null);
-
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, normalData.buffer);
-            this.#gl.vertexAttribPointer(this.#renderer.attributes.normal, 3, gl.FLOAT, false, 0, 0);
-            this.#gl.enableVertexAttribArray(this.#renderer.attributes.normal);
-            this.#gl.bindBuffer(this.#gl.ARRAY_BUFFER, null);
+            this.#renderer.attributes.position = positionData;
+            this.#renderer.attributes.normal = normalData;
 
             this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indexData.buffer);
 

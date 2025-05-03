@@ -79,8 +79,17 @@ class Renderer {
 
     #resolveAttributes(attributes) {
         this.#attributes = {};
+        const gl = this.#gl;
         for (let attribute of attributes) {
-            this.#attributes[attribute] = this.#gl.getAttribLocation(this.#program, attribute);
+            const location = this.#gl.getAttribLocation(this.#program, attribute);
+            Object.defineProperty(this.#attributes, attribute, {
+                set(data) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
+                    gl.vertexAttribPointer(location, 3, gl.FLOAT, false, 0, 0); // TODO no hardcoded 3
+                    gl.enableVertexAttribArray(location);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+                }
+            });
         }
     }
 }
