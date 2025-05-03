@@ -5,64 +5,39 @@ class Garden {
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #UNIFORMS = {
-       projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
-       camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
-       model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-       light: {
-           ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-           directional: {
-               color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-               direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
-           }
-       }
-   };
+        projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
+        camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
+        model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
+        light: {
+            ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
+            directional: {
+                color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
+                direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
+            }
+        }
+    };
 
-    #gl;
-    #renderer;
-    #array;
-    #count;
+    #task;
 
     constructor(gl, url) {
-        this.#gl = gl;
         return (async () => {
-            this.#renderer = await new Renderer(this.#gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
+            const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES);
             const garden = await(await GardenRacers.load(url)).json();
 
 
             const positions = this.#positions(garden);
-            const positionData = new AttributeData(this.#gl, positions);
-            const normalData = new AttributeData(this.#gl, this.#normals(garden, positions));
+            const positionData = new AttributeData(gl, positions);
+            const normalData = new AttributeData(gl, this.#normals(garden, positions));
             const indices = this.#indices(garden);
-            const indexData = new IndexData(this.#gl, indices);
-
-            this.#array = this.#gl.createVertexArray();
-            this.#gl.bindVertexArray(this.#array);
-
-            this.#renderer.attributes.position = positionData;
-            this.#renderer.attributes.normal = normalData;
-
-            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indexData.buffer);
-
-            this.#gl.bindVertexArray(null);
-            this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, null);
-
-            this.#count = indices.length;
+            const indexData = new IndexData(gl, indices);
+            this.#task = new RenderingTask(gl, renderer, {position: positionData, normal: normalData}, indexData);
             return this;
         })();
     }
 
     render(projection, camera, model) {
-        this.#gl.useProgram(this.#renderer.program);
-        this.#renderer.uniforms.projection = projection;
-        this.#renderer.uniforms.camera = camera;
-        this.#renderer.uniforms.model = model;
-        this.#renderer.uniforms.light.ambient = [0.25, 0.25, 0.25]; // 25% white TODO
-        this.#renderer.uniforms.light.directional.color = [0.75, 0.75, 0.75]; // 75% white TODO
-        this.#renderer.uniforms.light.directional.direction = [-1.0, -1.0, -1.0]; //  TODO
-        // TODO render
-        this.#gl.bindVertexArray(this.#array);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_SHORT, 0);
+        this.#task.render({projection, camera, model});
     }
 
     #positions(garden) {
