@@ -8,7 +8,7 @@ class GardenRacers {
     };
     static #DISTANCE = {
         min: 0.1, // 0.1 m
-        max: 10.0 // 10 m
+        max: 20.0 // 20 m
     };
     static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;

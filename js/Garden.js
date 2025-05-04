@@ -71,42 +71,50 @@ class Garden {
         const normals = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
+                const c = this.#getPosition(latitude, longitude);
+                const n = this.#getPosition(latitude + 1, longitude);
+                const ne = this.#getPosition(latitude + 1, longitude + 1);
+                const e = this.#getPosition(latitude, longitude + 1);
+                const se = this.#getPosition(latitude - 1, longitude + 1);
+                const s = this.#getPosition(latitude - 1, longitude);
+                const sw = this.#getPosition(latitude - 1, longitude - 1);
+                const w = this.#getPosition(latitude, longitude - 1);
+                const nw = this.#getPosition(latitude + 1, longitude - 1);
+                let normal = null;
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-                    const center = latitude * this.#garden.longitude + longitude;
-                    const north = (latitude + 1) * this.#garden.longitude + longitude;
-                    const northEast = (latitude + 1) * this.#garden.longitude + longitude + 1;
-                    const east = latitude * this.#garden.longitude + longitude + 1;
-                    const southEast = (latitude - 1) * this.#garden.longitude + longitude + 1;
-                    const south = (latitude - 1) * this.#garden.longitude + longitude;
-                    const southWest = (latitude - 1) * this.#garden.longitude + longitude - 1;
-                    const west = latitude * this.#garden.longitude + longitude - 1;
-                    const northWest = (latitude + 1) * this.#garden.longitude + longitude - 1;
-                    const c = this.#getPosition(this.#positions, center);
-                    const n = this.#getPosition(this.#positions, north);
-                    const ne = this.#getPosition(this.#positions, northEast);
-                    const e = this.#getPosition(this.#positions, east);
-                    const se = this.#getPosition(this.#positions, southEast);
-                    const s = this.#getPosition(this.#positions, south);
-                    const sw = this.#getPosition(this.#positions, southWest);
-                    const w = this.#getPosition(this.#positions, west);
-                    const nw = this.#getPosition(this.#positions, northWest);
-                    const normal = this.#average(this.#normal(n, c, ne),
-                            this.#normal(ne, c, e),
-                            this.#normal(e, c, se),
-                            this.#normal(se, c, s),
-                            this.#normal(s, c, sw),
-                            this.#normal(sw, c, w),
-                            this.#normal(w, c, nw),
-                            this.#normal(nw, c, n));
-                    // TODO
-                    normals.push(normal.x, normal.y, normal.z);
+                    normal = this.#normal(n, c, ne)
+                            .add(this.#normal(ne, c, e))
+                            .add(this.#normal(e, c, se))
+                            .add(this.#normal(se, c, s))
+                            .add(this.#normal(s, c, sw))
+                            .add(this.#normal(sw, c, w))
+                            .add(this.#normal(w, c, nw))
+                            .add(this.#normal(nw, c, n))
+                            .normalize();
                 } else if (latitude % 2 == 1) { // between parallels and on meridian
-                    normals.push(0.0, 0.0, 1.0);
+                    normal = this.#normal(n, c, e)
+                            .add(this.#normal(e, c, s))
+                            .add(this.#normal(s, c, w))
+                            .add(this.#normal(w, c, n))
+                            .normalize();
                 } else if (longitude % 2 == 1) { // on parallel between meridians
-                    normals.push(0.0, 0.0, 1.0);
+                    normal = this.#normal(n, c, e)
+                            .add(this.#normal(e, c, s))
+                            .add(this.#normal(s, c, w))
+                            .add(this.#normal(w, c, n))
+                            .normalize();
                 } else { // on parallel and on meridian
-                    normals.push(0.0, 0.0, 1.0);
+                    normal = this.#normal(n, c, ne)
+                            .add(this.#normal(ne, c, e))
+                            .add(this.#normal(e, c, se))
+                            .add(this.#normal(se, c, s))
+                            .add(this.#normal(s, c, sw))
+                            .add(this.#normal(sw, c, w))
+                            .add(this.#normal(w, c, nw))
+                            .add(this.#normal(nw, c, n))
+                            .normalize();
                 }
+                normals.push(normal.x, normal.y, normal.z);
             }
         }
         return normals;
@@ -129,39 +137,12 @@ class Garden {
         return indices;
     }
 
-    #getPosition(positions, i) {
-        return {x: positions[i * 3], y: positions[i * 3 + 1], z: positions[i * 3 + 2]};
+    #getPosition(latitude, longitude) {
+        const offset = (latitude * this.#garden.longitude + longitude) * Vector.COMPONENTS;
+        return new Vector(this.#positions[offset], this.#positions[offset + 1], this.#positions[offset + 2]);
     }
 
     #normal(a, b, c) {
-        return this.#normalize(this.#cross(this.#subtract(b, a), this.#subtract(c, b)));
-    }
-
-    #average(... as) {
-        let result = {x: 0.0, y: 0.0, z: 0.0};
-        for (const a of as) {
-            result = this.#add(result, a);
-        }
-        return this.#divide(result, as.length);
-    }
-
-    #add(a, b) {
-        return {x: a.x + b.x, y: a.y + b.y, z: a.z + b.z};
-    }
-
-    #subtract(a, b) {
-        return {x: a.x - b.x, y: a.y - b.y, z: a.z = b.z};
-    }
-
-    #divide(a, b) {
-        return {x: a.x / b, y: a.y / b, z: a.z / b};
-    }
-
-    #cross(a, b) {
-        return {x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x};
-    }
-
-    #normalize(a) {
-        return Math.sqrt(Math.pow(a.x, 2) + Math.pow(a.y, 2) + Math.pow(a.z, 2));
+        return b.subtract(a).cross(c.subtract(b)).normalize();
     }
 }
