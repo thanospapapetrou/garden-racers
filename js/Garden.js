@@ -18,11 +18,17 @@ class Garden {
     };
 
     #garden;
+    #positions;
+    #normals;
+    #indices;
     #task;
 
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
+            this.#calculatePositions();
+            this.#calculateNormals();
+            this.#calculateIndices();
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
                         position: new AttributeData(gl, this.#positions),
@@ -36,8 +42,8 @@ class Garden {
         this.#task.render({projection, camera, model, light});
     }
 
-    get #positions() {
-        const positions = [];
+    #calculatePositions() {
+        this.#positions = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const lat = Math.floor((latitude - 1) / 2);
@@ -61,14 +67,13 @@ class Garden {
                             + this.#garden.altitudes[south * this.#garden.longitude + west]
                             + this.#garden.altitudes[north * this.#garden.longitude + west]) / 4.0;
                 }
-                positions.push(longitude / 2.0, latitude / 2.0, altitude);
+                this.#positions.push(longitude / 2.0, latitude / 2.0, altitude);
             }
         }
-        return positions;
     }
 
-    get #normals() {
-        const normals = [];
+    #calculateNormals() {
+        this.#normals = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const c = this.#getPosition(latitude, longitude);
@@ -80,48 +85,47 @@ class Garden {
                 const sw = this.#getPosition(latitude - 1, longitude - 1);
                 const w = this.#getPosition(latitude, longitude - 1);
                 const nw = this.#getPosition(latitude + 1, longitude - 1);
-                let normal = null;
+                let normal = null; // TODO refactor to reduce size
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-                    normal = this.#normal(n, c, ne)
-                            .add(this.#normal(ne, c, e))
-                            .add(this.#normal(e, c, se))
-                            .add(this.#normal(se, c, s))
-                            .add(this.#normal(s, c, sw))
-                            .add(this.#normal(sw, c, w))
-                            .add(this.#normal(w, c, nw))
-                            .add(this.#normal(nw, c, n))
+                    normal = this.#calculateNormal(n, c, ne)
+                            .add(this.#calculateNormal(ne, c, e))
+                            .add(this.#calculateNormal(e, c, se))
+                            .add(this.#calculateNormal(se, c, s))
+                            .add(this.#calculateNormal(s, c, sw))
+                            .add(this.#calculateNormal(sw, c, w))
+                            .add(this.#calculateNormal(w, c, nw))
+                            .add(this.#calculateNormal(nw, c, n))
                             .normalize();
                 } else if (latitude % 2 == 1) { // between parallels and on meridian
-                    normal = this.#normal(n, c, e)
-                            .add(this.#normal(e, c, s))
-                            .add(this.#normal(s, c, w))
-                            .add(this.#normal(w, c, n))
+                    normal = this.#calculateNormal(n, c, e)
+                            .add(this.#calculateNormal(e, c, s))
+                            .add(this.#calculateNormal(s, c, w))
+                            .add(this.#calculateNormal(w, c, n))
                             .normalize();
                 } else if (longitude % 2 == 1) { // on parallel between meridians
-                    normal = this.#normal(n, c, e)
-                            .add(this.#normal(e, c, s))
-                            .add(this.#normal(s, c, w))
-                            .add(this.#normal(w, c, n))
+                    normal = this.#calculateNormal(n, c, e)
+                            .add(this.#calculateNormal(e, c, s))
+                            .add(this.#calculateNormal(s, c, w))
+                            .add(this.#calculateNormal(w, c, n))
                             .normalize();
                 } else { // on parallel and on meridian
-                    normal = this.#normal(n, c, ne)
-                            .add(this.#normal(ne, c, e))
-                            .add(this.#normal(e, c, se))
-                            .add(this.#normal(se, c, s))
-                            .add(this.#normal(s, c, sw))
-                            .add(this.#normal(sw, c, w))
-                            .add(this.#normal(w, c, nw))
-                            .add(this.#normal(nw, c, n))
+                    normal = this.#calculateNormal(n, c, ne)
+                            .add(this.#calculateNormal(ne, c, e))
+                            .add(this.#calculateNormal(e, c, se))
+                            .add(this.#calculateNormal(se, c, s))
+                            .add(this.#calculateNormal(s, c, sw))
+                            .add(this.#calculateNormal(sw, c, w))
+                            .add(this.#calculateNormal(w, c, nw))
+                            .add(this.#calculateNormal(nw, c, n))
                             .normalize();
                 }
-                normals.push(normal.x, normal.y, normal.z);
+                this.#normals.push(normal.x, normal.y, normal.z);
             }
         }
-        return normals;
     }
 
-    get #indices() {
-        const indices = [];
+    #calculateIndices() {
+        this.#indices = [];
         const n = 2 * this.#garden.longitude + 1;
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
@@ -130,11 +134,11 @@ class Garden {
                 for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
                     const dir = Object.values(Direction)[direction](lat, long);
                     const next = Object.values(Direction)[(direction + 1) % Object.keys(Direction).length](lat, long);
-                    indices.push(dir.lat * n + dir.long, lat * n + long, next.lat * n + next.long);
+                    this.#indices.push(dir.lat * n + dir.long, lat * n + long, next.lat * n + next.long);
                 }
             }
         }
-        return indices;
+        return this.#indices;
     }
 
     #getPosition(latitude, longitude) {
@@ -142,7 +146,7 @@ class Garden {
         return new Vector(this.#positions[offset], this.#positions[offset + 1], this.#positions[offset + 2]);
     }
 
-    #normal(a, b, c) {
+    #calculateNormal(a, b, c) {
         return b.subtract(a).cross(c.subtract(b)).normalize();
     }
 }
