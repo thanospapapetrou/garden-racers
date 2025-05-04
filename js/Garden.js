@@ -142,7 +142,8 @@ class Garden {
     }
 
     #getPosition(latitude, longitude) {
-        const offset = (latitude * this.#garden.longitude + longitude) * Vector.COMPONENTS;
+        const offset = (Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) * this.#garden.longitude
+                + Math.min(Math.max(longitude, 0), this.#garden.latitude)) * Vector.COMPONENTS;
         return new Vector(this.#positions[offset], this.#positions[offset + 1], this.#positions[offset + 2]);
     }
 
