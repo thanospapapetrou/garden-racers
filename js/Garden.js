@@ -1,13 +1,18 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = ['position', 'normal'];
+    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinates'];
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #UNIFORMS = {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
+        terrain: (gl, uniform, texture) => {
+            gl.activeTexture(gl.TEXTURE0 + 0); // TODO store offset in texture
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(uniform, 0); // TODO unbind texture
+        },
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
@@ -18,28 +23,33 @@ class Garden {
     };
 
     #garden;
+    #terrain;
     #positions;
     #normals;
+    #textureCoordinates;
     #indices;
     #task;
 
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
+            this.#terrain = new Texture(gl, './img/f-texture.png');
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
+            this.#textureCoordinates = this.#calculateTextureCoordinates();
             this.#indices = this.#calculateIndices();
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
                         position: new AttributeData(gl, this.#positions),
-                        normal: new AttributeData(gl, this.#normals)
+                        normal: new AttributeData(gl, this.#normals),
+                        textureCoordinates: new AttributeData(gl, this.#textureCoordinates)
                     }, new IndexData(gl, this.#indices));
             return this;
         })();
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, light});
+        this.#task.render({projection, camera, model, terrain: this.#terrain.texture, light});
     }
 
     #calculatePositions() {
@@ -116,6 +126,17 @@ class Garden {
             }
         }
         return normals;
+    }
+
+    #calculateTextureCoordinates() {
+        const textureCoordinates = [];
+        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
+                // TODO
+                textureCoordinates.push(latitude % 2, longitude % 2, 0.0);
+            }
+        }
+        return textureCoordinates;
     }
 
     #calculateIndices() {

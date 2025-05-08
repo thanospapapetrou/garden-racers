@@ -12,14 +12,16 @@ struct Light {
     Directional directional;
 };
 
+uniform sampler2D terrain;
 uniform Light light;
 
 in vec3 vertexNormal;
+in vec3 vertexTextureCoordinates;
 
 out vec4 fragmentColor;
 
 void main(void) {
-    fragmentColor = vec4(1.0, 1.0, 1.0, 1.0); // TODO white
+    fragmentColor = texture(terrain, vertexTextureCoordinates.st);
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);
 }

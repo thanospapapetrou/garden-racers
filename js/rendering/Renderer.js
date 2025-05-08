@@ -85,7 +85,7 @@ class Renderer {
             Object.defineProperty(this.#attributes, attribute, {
                 set(data) {
                     gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
-                    gl.vertexAttribPointer(location, 3, gl.FLOAT, false, 0, 0); // TODO no hardcoded 3
+                    gl.vertexAttribPointer(location, Vector.COMPONENTS, gl.FLOAT, false, 0, 0);
                     gl.enableVertexAttribArray(location);
                     gl.bindBuffer(gl.ARRAY_BUFFER, null);
                 }
