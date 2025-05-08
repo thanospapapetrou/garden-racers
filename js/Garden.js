@@ -33,7 +33,7 @@ class Garden {
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
-            this.#terrain = new Texture(gl, './img/f-texture.png');
+            this.#terrain = await new Texture(gl, './img/f-texture.png');
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
             this.#textureCoordinates = this.#calculateTextureCoordinates();
