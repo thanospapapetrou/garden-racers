@@ -3,9 +3,9 @@
 class Texture {
     static #ERROR_LOADING = (url) => `Error loading ${url}`;
 
-    #texture;
+    #unit;
 
-    constructor(gl, url) {
+    constructor(gl, unit, url) {
         return (async () => {
             const image = await new Promise((resolve) => {
                 const image = new Image();
@@ -15,9 +15,10 @@ class Texture {
                 };
                 image.src = url;
             });
-            gl.activeTexture(gl.TEXTURE0);
-            this.#texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this.#texture); // TODO unbound texture
+            this.#unit = unit;
+            const texture = gl.createTexture();
+            gl.activeTexture(this.#unit);
+            gl.bindTexture(gl.TEXTURE_2D, texture); // TODO unbound texture
 //            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             // TODO
 //                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -25,12 +26,14 @@ class Texture {
 //                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
             gl.generateMipmap(gl.TEXTURE_2D);
-//            gl.activeTexture(gl.TEXTURE2);
+//            gl.activeTexture(0);
+//            gl.bindTexture(gl.TEXTURE_2D, null); // TODO unbound texture
+////            gl.activeTexture(gl.TEXTURE2);
             return this;
         })();
     }
 
-    get texture() {
-        return this.#texture;
+    get unit() {
+        return this.#unit;
     }
 }

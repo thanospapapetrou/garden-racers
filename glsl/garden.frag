@@ -22,7 +22,7 @@ in vec3 vertexTextureCoordinates;
 out vec4 fragmentColor;
 
 void main(void) {
-    fragmentColor = texture(terrain, vertexTextureCoordinates.st);
+    fragmentColor = texture(terrain, vertexTextureCoordinates.st) * texture(other, vertexTextureCoordinates.st);
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);
 }

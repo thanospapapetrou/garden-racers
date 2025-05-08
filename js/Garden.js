@@ -8,16 +8,8 @@ class Garden {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        terrain: (gl, uniform, texture) => {
-            gl.activeTexture(gl.TEXTURE0); // TODO store offset in texture
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.uniform1i(uniform, 0); // TODO unbind texture
-        },
-        other: (gl, uniform, texture) => {
-            gl.activeTexture(gl.TEXTURE1); // TODO store offset in texture
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.uniform1i(uniform, 1); // TODO unbind texture
-        },
+        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
+        other: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
@@ -39,8 +31,8 @@ class Garden {
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
-            this.#terrain = await new Texture(gl, './img/f-texture.png'); // TODO
-            this.#other = await new Texture(gl, './img/cola-cao.jpg');
+            this.#terrain = await new Texture(gl, gl.TEXTURE0, './img/f-texture.png'); // TODO
+            this.#other = await new Texture(gl, gl.TEXTURE1, './img/cola-cao.jpg');
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
             this.#textureCoordinates = this.#calculateTextureCoordinates();
@@ -56,7 +48,7 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, terrain: this.#terrain.texture, other: this.#other.texture, light});
+        this.#task.render({projection, camera, model, terrain: this.#terrain, other: this.#other, light});
     }
 
     #calculatePositions() {
