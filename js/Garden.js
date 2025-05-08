@@ -9,9 +9,14 @@ class Garden {
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
         terrain: (gl, uniform, texture) => {
-            gl.activeTexture(gl.TEXTURE0 + 0); // TODO store offset in texture
+            gl.activeTexture(gl.TEXTURE0); // TODO store offset in texture
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.uniform1i(uniform, 0); // TODO unbind texture
+        },
+        other: (gl, uniform, texture) => {
+            gl.activeTexture(gl.TEXTURE1); // TODO store offset in texture
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(uniform, 1); // TODO unbind texture
         },
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
@@ -24,6 +29,7 @@ class Garden {
 
     #garden;
     #terrain;
+    #other;
     #positions;
     #normals;
     #textureCoordinates;
@@ -33,7 +39,8 @@ class Garden {
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
-            this.#terrain = await new Texture(gl, './img/f-texture.png');
+            this.#terrain = await new Texture(gl, './img/f-texture.png'); // TODO
+            this.#other = await new Texture(gl, './img/cola-cao.jpg');
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
             this.#textureCoordinates = this.#calculateTextureCoordinates();
@@ -49,7 +56,7 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, terrain: this.#terrain.texture, light});
+        this.#task.render({projection, camera, model, terrain: this.#terrain.texture, other: this.#other.texture, light});
     }
 
     #calculatePositions() {

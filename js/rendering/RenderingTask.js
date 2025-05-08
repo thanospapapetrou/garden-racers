@@ -30,7 +30,7 @@ class RenderingTask {
 
     #setUniforms(uniforms, values) {
         for (let uniform of Object.keys(values)) {
-            if ((values[uniform] instanceof Array) || (values[uniform] instanceof Float32Array)) {
+            if ((values[uniform] instanceof Array) || (values[uniform] instanceof Float32Array) || (values[uniform] instanceof WebGLTexture)) {
                 uniforms[uniform] = values[uniform];
             } else {
                 this.#setUniforms(uniforms[uniform], values[uniform]);

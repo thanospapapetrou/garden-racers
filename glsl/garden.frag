@@ -13,6 +13,7 @@ struct Light {
 };
 
 uniform sampler2D terrain;
+uniform sampler2D other;
 uniform Light light;
 
 in vec3 vertexNormal;
