@@ -2,6 +2,7 @@
 
 class Garden {
     static #ATTRIBUTES = ['position', 'normal', 'textureCoordinates'];
+    static #IMAGE_TERRAIN = './img/terrain.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #UNIFORMS = {
@@ -9,7 +10,6 @@ class Garden {
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
         terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
-        other: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
@@ -21,7 +21,6 @@ class Garden {
 
     #garden;
     #terrain;
-    #other;
     #positions;
     #normals;
     #textureCoordinates;
@@ -31,8 +30,7 @@ class Garden {
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
-            this.#terrain = await new Texture(gl, gl.TEXTURE0, './img/f-texture.png'); // TODO
-            this.#other = await new Texture(gl, gl.TEXTURE1, './img/cola-cao.jpg');
+            this.#terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
             this.#textureCoordinates = this.#calculateTextureCoordinates();
@@ -48,7 +46,7 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, terrain: this.#terrain, other: this.#other, light});
+        this.#task.render({projection, camera, model, terrain: this.#terrain, light});
     }
 
     #calculatePositions() {
@@ -131,8 +129,15 @@ class Garden {
         const textureCoordinates = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                // TODO
-                textureCoordinates.push(latitude % 2, longitude % 2, 0.0);
+                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
+                    textureCoordinates.push(1.0, 0.0, 1.0);
+                } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
+                    textureCoordinates.push(0.5, 0.0, 1.0);
+                } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
+                    textureCoordinates.push(1.0, 0.5, 1.0);
+                } else { // on parallel and on meridian; average all directions
+                    textureCoordinates.push(0.5, 0.5, 1.0);
+                }
             }
         }
         return textureCoordinates;
