@@ -117,7 +117,7 @@ class Garden {
                         .add(this.#calculateNormal(center, north, northwest))
                         .add(this.#calculateNormal(northwest, north, northCenter))
                         .normalize());
-                normals.push(northeast.x, northeast.y, this.#calculateNormal(, center, northeast)
+                normals.push(northeast.x, northeast.y, this.#calculateNormal(east, center, northeast)
                         // TODO
 //                        .add(this.#calculateNormal(northwest, center, north))
 //                        .add(this.#calculateNormal(northwest, center, north))
@@ -156,60 +156,8 @@ class Garden {
 //                        .add(this.#calculateNormal(northwest, center, north))
                         .add(this.#calculateNormal(northwest, center, north))
                         .normalize());
-
-
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
             }
         }
-//        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
-//            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-//                const c = this.#getPosition(latitude, longitude);
-//                const n = this.#getPosition(latitude + 1, longitude);
-//                const ne = this.#getPosition(latitude + 1, longitude + 1);
-//                const e = this.#getPosition(latitude, longitude + 1);
-//                const se = this.#getPosition(latitude - 1, longitude + 1);
-//                const s = this.#getPosition(latitude - 1, longitude);
-//                const sw = this.#getPosition(latitude - 1, longitude - 1);
-//                const w = this.#getPosition(latitude, longitude - 1);
-//                const nw = this.#getPosition(latitude + 1, longitude - 1);
-//                let normal = null; // TODO refactor to reduce size
-//                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-//                    normal = this.#calculateNormal(n, c, ne)
-//                            .add(this.#calculateNormal(ne, c, e))
-//                            .add(this.#calculateNormal(e, c, se))
-//                            .add(this.#calculateNormal(se, c, s))
-//                            .add(this.#calculateNormal(s, c, sw))
-//                            .add(this.#calculateNormal(sw, c, w))
-//                            .add(this.#calculateNormal(w, c, nw))
-//                            .add(this.#calculateNormal(nw, c, n))
-//                            .normalize();
-//                } else if (latitude % 2 == 1) { // between parallels and on meridian
-//                    normal = this.#calculateNormal(n, c, e)
-//                            .add(this.#calculateNormal(e, c, s))
-//                            .add(this.#calculateNormal(s, c, w))
-//                            .add(this.#calculateNormal(w, c, n))
-//                            .normalize();
-//                } else if (longitude % 2 == 1) { // on parallel between meridians
-//                    normal = this.#calculateNormal(n, c, e)
-//                            .add(this.#calculateNormal(e, c, s))
-//                            .add(this.#calculateNormal(s, c, w))
-//                            .add(this.#calculateNormal(w, c, n))
-//                            .normalize();
-//                } else { // on parallel and on meridian
-//                    normal = this.#calculateNormal(n, c, ne)
-//                            .add(this.#calculateNormal(ne, c, e))
-//                            .add(this.#calculateNormal(e, c, se))
-//                            .add(this.#calculateNormal(se, c, s))
-//                            .add(this.#calculateNormal(s, c, sw))
-//                            .add(this.#calculateNormal(sw, c, w))
-//                            .add(this.#calculateNormal(w, c, nw))
-//                            .add(this.#calculateNormal(nw, c, n))
-//                            .normalize();
-//                }
-//                normals.push(normal.x, normal.y, normal.z);
-//            }
-//        }
         return normals;
     }
 
