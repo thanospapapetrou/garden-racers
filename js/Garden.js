@@ -90,13 +90,74 @@ class Garden {
         const normals = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
-                normals.push(0.0, 0.0, 1.0);
+                const center = this.#getPosition(latitude, longitude, null);
+                const northCenter = this.#getPosition(latitude + 1, longitude, null);
+                const eastCenter = this.#getPosition(latitude, longitude + 1, null);
+                const southCenter = this.#getPosition(latitude - 1, longitude, null);
+                const westCenter = this.#getPosition(latitude, longitude - 1, null);
+                const north = this.#getPosition(latitude, longitude, Direction.NORTH);
+                const northeast = this.#getPosition(latitude, longitude, Direction.NORTHEAST);
+                const east = this.#getPosition(latitude, longitude, Direction.EAST);
+                const southeast = this.#getPosition(latitude, longitude, Direction.SOUTHEAST);
+                const south = this.#getPosition(latitude, longitude, Direction.SOUTH);
+                const southwest = this.#getPosition(latitude, longitude, Direction.SOUTHWEST);
+                const west = this.#getPosition(latitude, longitude, Direction.WEST);
+                const northwest = this.#getPosition(latitude, longitude, Direction.NORTHWEST);
+                normals.push(center.x, center.y, this.#calculateNormal(north, center, northeast)
+                        .add(this.#calculateNormal(northeast, center, east))
+                        .add(this.#calculateNormal(east, center, southeast))
+                        .add(this.#calculateNormal(southeast, center, south))
+                        .add(this.#calculateNormal(south, center, southwest))
+                        .add(this.#calculateNormal(southwest, center, west))
+                        .add(this.#calculateNormal(west, center, northwest))
+                        .add(this.#calculateNormal(northwest, center, north))
+                        .normalize());
+                normals.push(north.x, north.y, this.#calculateNormal(northCenter, north, northeast)
+                        .add(this.#calculateNormal(northeast, north, center))
+                        .add(this.#calculateNormal(center, north, northwest))
+                        .add(this.#calculateNormal(northwest, north, northCenter))
+                        .normalize());
+                normals.push(northeast.x, northeast.y, this.#calculateNormal(, center, northeast)
+                        // TODO
+//                        .add(this.#calculateNormal(northwest, center, north))
+//                        .add(this.#calculateNormal(northwest, center, north))
+                        .add(this.#calculateNormal(northeast, center, east))
+                        .normalize());
+                normals.push(east.x, east.y, this.#calculateNormal(northeast, east, eastCenter)
+                        .add(this.#calculateNormal(eastCenter, east, southeast))
+                        .add(this.#calculateNormal(southeast, east, center))
+                        .add(this.#calculateNormal(center, east, northeast))
+                        .normalize());
+                normals.push(southeast.x, southeast.y, this.#calculateNormal(east, center, southeast)
+                    // TODO
+//                        .add(this.#calculateNormal(northwest, center, north))
+//                        .add(this.#calculateNormal(northwest, center, north))
+                        .add(this.#calculateNormal(southeast, center, south))
+                        .normalize());
+                normals.push(south.x, south.y, this.#calculateNormal(center, south, southeast)
+                        .add(this.#calculateNormal(southeast, south, southCenter))
+                        .add(this.#calculateNormal(southCenter, south, southwest))
+                        .add(this.#calculateNormal(southwest, south, center))
+                        .normalize());
+                normals.push(southwest.x, southwest.y, this.#calculateNormal(south, center, southeast)
+                    // TODO
+//                        .add(this.#calculateNormal(northwest, center, north))
+//                        .add(this.#calculateNormal(northwest, center, north))
+                        .add(this.#calculateNormal(southeast, center, west))
+                        .normalize());
+                normals.push(west.x, west.y, this.#calculateNormal(northwest, west, center)
+                        .add(this.#calculateNormal(center, west, southwest))
+                        .add(this.#calculateNormal(southwest, west, westCenter))
+                        .add(this.#calculateNormal(westCenter, west, northwest))
+                        .normalize());
+                normals.push(northwest.x, northwest.y, this.#calculateNormal(west, center, northwest)
+                // TODO
+//                        .add(this.#calculateNormal(northwest, center, north))
+//                        .add(this.#calculateNormal(northwest, center, north))
+                        .add(this.#calculateNormal(northwest, center, north))
+                        .normalize());
+
+
                 normals.push(0.0, 0.0, 1.0);
                 normals.push(0.0, 0.0, 1.0);
             }
@@ -193,20 +254,23 @@ class Garden {
     }
 
     #getAltitude(latitude, longitude) {
-        return this.#garden.altitudes[Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) * this.#garden.longitude
-                + Math.min(Math.max(longitude, 0), this.#garden.longitude - 1)];
+        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
+        const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
+        return this.#garden.altitudes[lat * this.#garden.longitude + long];
     }
 
     #getTerrain(latitude, longitude) {
-        return this.#garden.terrains[Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) * this.#garden.longitude
-                + Math.min(Math.max(longitude, 0), this.#garden.longitude - 1)]
+        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
+        const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
+        return this.#garden.terrains[lat * this.#garden.longitude + long];
     }
 
-    #getPosition(latitude, longitude) {
-        return new Vector(longitude / 2, latitude / 2,
-                this.#positions[(Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude)
-                * (2 * this.#garden.longitude + 1) + Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude))
-                * Vector.COMPONENTS + 2]);
+    #getPosition(latitude, longitude, direction) {
+        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
+        const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
+        const offset = (lat * this.#garden.longitude + long) * (Object.keys(Direction).length + 1)
+                + ((direction == null) ? 0 : (Object.values(Direction).indexOf(direction) + 1));
+        return new Vector(this.#positions[offset], this.#positions[offset + 1], this.#positions[offset + 2]);
     }
 
     #calculateNormal(a, b, c) {
