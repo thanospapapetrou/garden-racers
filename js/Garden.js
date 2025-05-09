@@ -27,6 +27,10 @@ class Garden {
     #indices;
     #task;
 
+    // TODO terrain blending
+    // TODO map mirroring
+    // TODO normals
+
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
@@ -51,22 +55,34 @@ class Garden {
 
     #calculatePositions() {
         const positions = [];
-        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
-            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                const lat = Math.floor((latitude - 1) / 2);
-                const long = Math.floor((longitude - 1) / 2);
-                let altitude = 0.0;
-                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
-                    altitude = this.#getAltitude(lat, long);
-                } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
-                    altitude = (this.#getAltitude(lat, long + 1) + this.#getAltitude(lat, long)) / 2.0;
-                } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
-                    altitude = (this.#getAltitude(lat + 1, long) + this.#getAltitude(lat, long)) / 2.0;
-                } else { // on parallel and on meridian; average all directions
-                    altitude = (this.#getAltitude(lat + 1, long + 1) + this.#getAltitude(lat, long + 1)
-                            + this.#getAltitude(lat, long) + this.#getAltitude(lat + 1, long)) / 4.0;
-                }
-                positions.push(longitude / 2.0, latitude / 2.0, altitude);
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                // TODO simplify
+                positions.push(longitude + 0.5, latitude + 0.5, this.#getAltitude(latitude, longitude));
+                positions.push(longitude + 0.5, latitude + 1.0, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude + 1, longitude)) / 2.0);
+                positions.push(longitude + 1.0, latitude + 1.0, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude + 1, longitude)
+                        + this.#getAltitude(latitude + 1, longitude + 1)
+                        + this.#getAltitude(latitude, longitude + 1)) / 4.0);
+                positions.push(longitude + 1.0, latitude + 0.5, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude, longitude + 1)) / 2.0);
+                positions.push(longitude + 1.0, latitude, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude, longitude + 1)
+                        + this.#getAltitude(latitude - 1, longitude + 1)
+                        + this.#getAltitude(latitude - 1, longitude)) / 4.0);
+                positions.push(longitude + 0.5, latitude, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude - 1, longitude)) / 2.0);
+                positions.push(longitude, latitude, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude - 1, longitude)
+                        + this.#getAltitude(latitude - 1, longitude - 1)
+                        + this.#getAltitude(latitude, longitude - 1)) / 4.0);
+                positions.push(longitude, latitude + 0.5, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude, longitude - 1)) / 2.0);
+                positions.push(longitude, latitude + 1.0, (this.#getAltitude(latitude, longitude)
+                        + this.#getAltitude(latitude, longitude - 1)
+                        + this.#getAltitude(latitude + 1, longitude - 1)
+                        + this.#getAltitude(latitude + 1, longitude)) / 4.0);
             }
         }
         return positions;
@@ -74,70 +90,84 @@ class Garden {
 
     #calculateNormals() {
         const normals = [];
-        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
-            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                const c = this.#getPosition(latitude, longitude);
-                const n = this.#getPosition(latitude + 1, longitude);
-                const ne = this.#getPosition(latitude + 1, longitude + 1);
-                const e = this.#getPosition(latitude, longitude + 1);
-                const se = this.#getPosition(latitude - 1, longitude + 1);
-                const s = this.#getPosition(latitude - 1, longitude);
-                const sw = this.#getPosition(latitude - 1, longitude - 1);
-                const w = this.#getPosition(latitude, longitude - 1);
-                const nw = this.#getPosition(latitude + 1, longitude - 1);
-                let normal = null; // TODO refactor to reduce size
-                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-                    normal = this.#calculateNormal(n, c, ne)
-                            .add(this.#calculateNormal(ne, c, e))
-                            .add(this.#calculateNormal(e, c, se))
-                            .add(this.#calculateNormal(se, c, s))
-                            .add(this.#calculateNormal(s, c, sw))
-                            .add(this.#calculateNormal(sw, c, w))
-                            .add(this.#calculateNormal(w, c, nw))
-                            .add(this.#calculateNormal(nw, c, n))
-                            .normalize();
-                } else if (latitude % 2 == 1) { // between parallels and on meridian
-                    normal = this.#calculateNormal(n, c, e)
-                            .add(this.#calculateNormal(e, c, s))
-                            .add(this.#calculateNormal(s, c, w))
-                            .add(this.#calculateNormal(w, c, n))
-                            .normalize();
-                } else if (longitude % 2 == 1) { // on parallel between meridians
-                    normal = this.#calculateNormal(n, c, e)
-                            .add(this.#calculateNormal(e, c, s))
-                            .add(this.#calculateNormal(s, c, w))
-                            .add(this.#calculateNormal(w, c, n))
-                            .normalize();
-                } else { // on parallel and on meridian
-                    normal = this.#calculateNormal(n, c, ne)
-                            .add(this.#calculateNormal(ne, c, e))
-                            .add(this.#calculateNormal(e, c, se))
-                            .add(this.#calculateNormal(se, c, s))
-                            .add(this.#calculateNormal(s, c, sw))
-                            .add(this.#calculateNormal(sw, c, w))
-                            .add(this.#calculateNormal(w, c, nw))
-                            .add(this.#calculateNormal(nw, c, n))
-                            .normalize();
-                }
-                normals.push(normal.x, normal.y, normal.z);
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
+                normals.push(0.0, 0.0, 1.0);
             }
         }
+//        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+//            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
+//                const c = this.#getPosition(latitude, longitude);
+//                const n = this.#getPosition(latitude + 1, longitude);
+//                const ne = this.#getPosition(latitude + 1, longitude + 1);
+//                const e = this.#getPosition(latitude, longitude + 1);
+//                const se = this.#getPosition(latitude - 1, longitude + 1);
+//                const s = this.#getPosition(latitude - 1, longitude);
+//                const sw = this.#getPosition(latitude - 1, longitude - 1);
+//                const w = this.#getPosition(latitude, longitude - 1);
+//                const nw = this.#getPosition(latitude + 1, longitude - 1);
+//                let normal = null; // TODO refactor to reduce size
+//                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
+//                    normal = this.#calculateNormal(n, c, ne)
+//                            .add(this.#calculateNormal(ne, c, e))
+//                            .add(this.#calculateNormal(e, c, se))
+//                            .add(this.#calculateNormal(se, c, s))
+//                            .add(this.#calculateNormal(s, c, sw))
+//                            .add(this.#calculateNormal(sw, c, w))
+//                            .add(this.#calculateNormal(w, c, nw))
+//                            .add(this.#calculateNormal(nw, c, n))
+//                            .normalize();
+//                } else if (latitude % 2 == 1) { // between parallels and on meridian
+//                    normal = this.#calculateNormal(n, c, e)
+//                            .add(this.#calculateNormal(e, c, s))
+//                            .add(this.#calculateNormal(s, c, w))
+//                            .add(this.#calculateNormal(w, c, n))
+//                            .normalize();
+//                } else if (longitude % 2 == 1) { // on parallel between meridians
+//                    normal = this.#calculateNormal(n, c, e)
+//                            .add(this.#calculateNormal(e, c, s))
+//                            .add(this.#calculateNormal(s, c, w))
+//                            .add(this.#calculateNormal(w, c, n))
+//                            .normalize();
+//                } else { // on parallel and on meridian
+//                    normal = this.#calculateNormal(n, c, ne)
+//                            .add(this.#calculateNormal(ne, c, e))
+//                            .add(this.#calculateNormal(e, c, se))
+//                            .add(this.#calculateNormal(se, c, s))
+//                            .add(this.#calculateNormal(s, c, sw))
+//                            .add(this.#calculateNormal(sw, c, w))
+//                            .add(this.#calculateNormal(w, c, nw))
+//                            .add(this.#calculateNormal(nw, c, n))
+//                            .normalize();
+//                }
+//                normals.push(normal.x, normal.y, normal.z);
+//            }
+//        }
         return normals;
     }
 
     #calculateTextureCoordinates() {
         const textureCoordinates = [];
-        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
-            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
-                    textureCoordinates.push(1.0, 0.0, 1.0);
-                } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
-                    textureCoordinates.push(0.5, 0.0, 1.0);
-                } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
-                    textureCoordinates.push(1.0, 0.5, 1.0);
-                } else { // on parallel and on meridian; average all directions
-                    textureCoordinates.push(0.5, 0.5, 1.0);
-                }
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
+                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 0.5, 1.0);
+                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 0.0, 1.0);
+                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 0.0, 1.0);
+                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 0.5, 1.0);
+                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 1.0, 1.0);
+                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 1.0, 1.0);
+                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 1.0, 1.0);
+                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 0.5, 1.0);
+                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 0.0, 1.0);
             }
         }
         return textureCoordinates;
@@ -145,15 +175,13 @@ class Garden {
 
     #calculateIndices() {
         const indices = [];
-        const n = 2 * this.#garden.longitude + 1;
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const lat = 2 * latitude + 1;
-                const long = 2 * longitude + 1;
                 for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
-                    const dir = Object.values(Direction)[direction](lat, long);
-                    const next = Object.values(Direction)[(direction + 1) % Object.keys(Direction).length](lat, long);
-                    indices.push(dir.lat * n + dir.long, lat * n + long, next.lat * n + next.long);
+                    const next = (direction + 1) % Object.keys(Direction).length;
+                    const offset = latitude * this.#garden.longitude * (Object.keys(Direction).length + 1)
+                            + longitude * (Object.keys(Direction).length + 1);
+                    indices.push(offset + direction + 1, offset, offset + next + 1);
                 }
             }
         }
@@ -163,6 +191,11 @@ class Garden {
     #getAltitude(latitude, longitude) {
         return this.#garden.altitudes[Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) * this.#garden.longitude
                 + Math.min(Math.max(longitude, 0), this.#garden.longitude - 1)];
+    }
+
+    #getTerrain(latitude, longitude) {
+        return this.#garden.terrains[Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) * this.#garden.longitude
+                + Math.min(Math.max(longitude, 0), this.#garden.longitude - 1)]
     }
 
     #getPosition(latitude, longitude) {

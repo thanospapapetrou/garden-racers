@@ -2,10 +2,17 @@
   "latitude": 5,
   "longitude": 10,
   "altitudes": [
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.5,
-    0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.5
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  ],
+  "terrains": [
+    "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS",
+    "GRASS", "GRASS", "GRASS", "DIRT", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS",
+    "GRASS", "GRASS", "ROCK", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS",
+    "GRASS", "SAND", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS",
+    "WATER", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS", "GRASS"
   ]
 }
