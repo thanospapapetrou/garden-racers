@@ -57,32 +57,30 @@ class Garden {
         const positions = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                // TODO simplify
-                positions.push(longitude + 0.5, latitude + 0.5, this.#getAltitude(latitude, longitude));
-                positions.push(longitude + 0.5, latitude + 1.0, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude + 1, longitude)) / 2.0);
-                positions.push(longitude + 1.0, latitude + 1.0, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude + 1, longitude)
-                        + this.#getAltitude(latitude + 1, longitude + 1)
-                        + this.#getAltitude(latitude, longitude + 1)) / 4.0);
-                positions.push(longitude + 1.0, latitude + 0.5, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude, longitude + 1)) / 2.0);
-                positions.push(longitude + 1.0, latitude, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude, longitude + 1)
-                        + this.#getAltitude(latitude - 1, longitude + 1)
-                        + this.#getAltitude(latitude - 1, longitude)) / 4.0);
-                positions.push(longitude + 0.5, latitude, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude - 1, longitude)) / 2.0);
-                positions.push(longitude, latitude, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude - 1, longitude)
-                        + this.#getAltitude(latitude - 1, longitude - 1)
-                        + this.#getAltitude(latitude, longitude - 1)) / 4.0);
-                positions.push(longitude, latitude + 0.5, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude, longitude - 1)) / 2.0);
-                positions.push(longitude, latitude + 1.0, (this.#getAltitude(latitude, longitude)
-                        + this.#getAltitude(latitude, longitude - 1)
-                        + this.#getAltitude(latitude + 1, longitude - 1)
-                        + this.#getAltitude(latitude + 1, longitude)) / 4.0);
+                const latC = latitude + 0.5;
+                const latN = latitude + 1.0;
+                const latS = latitude;
+                const longC = longitude + 0.5;
+                const longE = longitude + 1.0;
+                const longW = longitude;
+                const altC = this.#getAltitude(latitude, longitude);
+                const altN = this.#getAltitude(latitude + 1, longitude);
+                const altNE = this.#getAltitude(latitude + 1, longitude + 1);
+                const altE = this.#getAltitude(latitude, longitude + 1);
+                const altSE = this.#getAltitude(latitude - 1, longitude + 1);
+                const altS = this.#getAltitude(latitude - 1, longitude);
+                const altSW = this.#getAltitude(latitude - 1, longitude - 1);
+                const altW = this.#getAltitude(latitude, longitude - 1);
+                const altNW = this.#getAltitude(latitude + 1, longitude - 1);
+                positions.push(longC, latC, altC);
+                positions.push(longC, latN, (altC + altN) / 2.0);
+                positions.push(longE, latN, (altC + altN + altNE + altE) / 4.0);
+                positions.push(longE, latC, (altC + altE) / 2.0);
+                positions.push(longE, latS, (altC + altE + altSE + altS) / 4.0);
+                positions.push(longC, latS, (altC + altS) / 2.0);
+                positions.push(longW, latS, (altC + altS + altSW + altW) / 4.0);
+                positions.push(longW, latC, (altC + altW) / 2.0);
+                positions.push(longW, latN, (altC + altW + altNW + altN) / 4.0);
             }
         }
         return positions;
@@ -159,15 +157,21 @@ class Garden {
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
-                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 0.5, 1.0);
-                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 0.0, 1.0);
-                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 0.0, 1.0);
-                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 0.5, 1.0);
-                textureCoordinates.push((terrain + 1.0) / Object.keys(Terrain).length, 1.0, 1.0);
-                textureCoordinates.push((terrain + 0.5) / Object.keys(Terrain).length, 1.0, 1.0);
-                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 1.0, 1.0);
-                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 0.5, 1.0);
-                textureCoordinates.push((terrain + 0.0) / Object.keys(Terrain).length, 0.0, 1.0);
+                const sC = (terrain + 0.5) / Object.keys(Terrain).length;
+                const sE = (terrain + 1.0) / Object.keys(Terrain).length;
+                const sW = terrain / Object.keys(Terrain).length;
+                const tC = 0.5;
+                const tN = 0.0;
+                const tS = 1.0;
+                textureCoordinates.push(sC, tC, 1.0);
+                textureCoordinates.push(sC, tN, 1.0);
+                textureCoordinates.push(sE, tN, 1.0);
+                textureCoordinates.push(sE, tC, 1.0);
+                textureCoordinates.push(sE, tS, 1.0);
+                textureCoordinates.push(sC, tS, 1.0);
+                textureCoordinates.push(sW, tS, 1.0);
+                textureCoordinates.push(sW, tC, 1.0);
+                textureCoordinates.push(sW, tN, 1.0);
             }
         }
         return textureCoordinates;
