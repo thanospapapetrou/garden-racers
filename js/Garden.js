@@ -21,6 +21,8 @@ class Garden {
 
     #garden;
     #terrain;
+    #positionLattice;
+    #normalLattice;
     #positions;
     #normals;
     #textureCoordinates;
@@ -35,6 +37,8 @@ class Garden {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
             this.#terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
+            this.#positionLattice = this.#calculatePositionLattice();
+            this.#normalLattice = this.#calculateNormalLattice();
             this.#positions = this.#calculatePositions();
             this.#normals = this.#calculateNormals();
             this.#textureCoordinates = this.#calculateTextureCoordinates();
@@ -53,34 +57,94 @@ class Garden {
         this.#task.render({projection, camera, model, terrain: this.#terrain, light});
     }
 
+    #calculatePositionLattice() {
+        const lattice = [];
+        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
+                const lat = Math.floor((latitude - 1) / 2);
+                const long = Math.floor((longitude - 1) / 2);
+                let altitude = 0.0;
+                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
+                    altitude = this.#getAltitude(lat, long);
+                } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
+                    altitude = (this.#getAltitude(lat, long + 1) + this.#getAltitude(lat, long)) / 2.0;
+                } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
+                    altitude = (this.#getAltitude(lat + 1, long) + this.#getAltitude(lat, long)) / 2.0;
+                } else { // on parallel and on meridian; average all directions
+                    altitude = (this.#getAltitude(lat + 1, long + 1) + this.#getAltitude(lat, long + 1)
+                            + this.#getAltitude(lat, long) + this.#getAltitude(lat + 1, long)) / 4.0;
+                }
+                lattice.push(new Vector(0.5 * longitude, 0.5 * latitude, altitude));
+            }
+        }
+        return lattice;
+    }
+
+    #calculateNormalLattice() {
+        const lattice = [];
+        for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
+                const c = this.#getPositionLattice(latitude, longitude);
+                const n = this.#getPositionLattice(latitude + 1, longitude);
+                const ne = this.#getPositionLattice(latitude + 1, longitude + 1);
+                const e = this.#getPositionLattice(latitude, longitude + 1);
+                const se = this.#getPositionLattice(latitude - 1, longitude + 1);
+                const s = this.#getPositionLattice(latitude - 1, longitude);
+                const sw = this.#getPositionLattice(latitude - 1, longitude - 1);
+                const w = this.#getPositionLattice(latitude, longitude - 1);
+                const nw = this.#getPositionLattice(latitude + 1, longitude - 1);
+                // TODO refactor to reduce size
+                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
+                    lattice.push(this.#calculateNormal(n, c, ne)
+                            .add(this.#calculateNormal(ne, c, e))
+                            .add(this.#calculateNormal(e, c, se))
+                            .add(this.#calculateNormal(se, c, s))
+                            .add(this.#calculateNormal(s, c, sw))
+                            .add(this.#calculateNormal(sw, c, w))
+                            .add(this.#calculateNormal(w, c, nw))
+                            .add(this.#calculateNormal(nw, c, n))
+                            .normalize());
+                } else if (latitude % 2 == 1) { // between parallels and on meridian
+                    lattice.push(this.#calculateNormal(n, c, e)
+                            .add(this.#calculateNormal(e, c, s))
+                            .add(this.#calculateNormal(s, c, w))
+                            .add(this.#calculateNormal(w, c, n))
+                            .normalize());
+                } else if (longitude % 2 == 1) { // on parallel between meridians
+                    lattice.push(this.#calculateNormal(n, c, e)
+                            .add(this.#calculateNormal(e, c, s))
+                            .add(this.#calculateNormal(s, c, w))
+                            .add(this.#calculateNormal(w, c, n))
+                            .normalize());
+                } else { // on parallel and on meridian
+                    lattice.push(this.#calculateNormal(n, c, ne)
+                            .add(this.#calculateNormal(ne, c, e))
+                            .add(this.#calculateNormal(e, c, se))
+                            .add(this.#calculateNormal(se, c, s))
+                            .add(this.#calculateNormal(s, c, sw))
+                            .add(this.#calculateNormal(sw, c, w))
+                            .add(this.#calculateNormal(w, c, nw))
+                            .add(this.#calculateNormal(nw, c, n))
+                            .normalize());
+                }
+            }
+        }
+        return lattice;
+    }
+
     #calculatePositions() {
         const positions = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const latC = latitude + 0.5;
-                const latN = latitude + 1.0;
-                const latS = latitude;
-                const longC = longitude + 0.5;
-                const longE = longitude + 1.0;
-                const longW = longitude;
-                const altC = this.#getAltitude(latitude, longitude);
-                const altN = this.#getAltitude(latitude + 1, longitude);
-                const altNE = this.#getAltitude(latitude + 1, longitude + 1);
-                const altE = this.#getAltitude(latitude, longitude + 1);
-                const altSE = this.#getAltitude(latitude - 1, longitude + 1);
-                const altS = this.#getAltitude(latitude - 1, longitude);
-                const altSW = this.#getAltitude(latitude - 1, longitude - 1);
-                const altW = this.#getAltitude(latitude, longitude - 1);
-                const altNW = this.#getAltitude(latitude + 1, longitude - 1);
-                positions.push(longC, latC, altC);
-                positions.push(longC, latN, (altC + altN) / 2.0);
-                positions.push(longE, latN, (altC + altN + altNE + altE) / 4.0);
-                positions.push(longE, latC, (altC + altE) / 2.0);
-                positions.push(longE, latS, (altC + altE + altSE + altS) / 4.0);
-                positions.push(longC, latS, (altC + altS) / 2.0);
-                positions.push(longW, latS, (altC + altS + altSW + altW) / 4.0);
-                positions.push(longW, latC, (altC + altW) / 2.0);
-                positions.push(longW, latN, (altC + altW + altNW + altN) / 4.0);
+                const lat = 2 * latitude + 1;
+                const long = 2 * longitude + 1;
+                const position = this.#getPositionLattice(lat, long);
+                positions.push(position.x, position.y, position.z);
+                for (let direction of Object.values(Direction)) {
+                    const foo = direction(lat, long); // TODO rename
+                    const position = this.#getPositionLattice(foo.lat, foo.long);
+                    positions.push(position.x, position.y, position.z);
+                }
             }
         }
         return positions;
@@ -90,72 +154,15 @@ class Garden {
         const normals = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const center = this.#getPosition(latitude, longitude, null);
-                const northCenter = this.#getPosition(latitude + 1, longitude, null);
-                const eastCenter = this.#getPosition(latitude, longitude + 1, null);
-                const southCenter = this.#getPosition(latitude - 1, longitude, null);
-                const westCenter = this.#getPosition(latitude, longitude - 1, null);
-                const north = this.#getPosition(latitude, longitude, Direction.NORTH);
-                const northeast = this.#getPosition(latitude, longitude, Direction.NORTHEAST);
-                const east = this.#getPosition(latitude, longitude, Direction.EAST);
-                const southeast = this.#getPosition(latitude, longitude, Direction.SOUTHEAST);
-                const south = this.#getPosition(latitude, longitude, Direction.SOUTH);
-                const southwest = this.#getPosition(latitude, longitude, Direction.SOUTHWEST);
-                const west = this.#getPosition(latitude, longitude, Direction.WEST);
-                const northwest = this.#getPosition(latitude, longitude, Direction.NORTHWEST);
-                normals.push(center.x, center.y, this.#calculateNormal(north, center, northeast)
-                        .add(this.#calculateNormal(northeast, center, east))
-                        .add(this.#calculateNormal(east, center, southeast))
-                        .add(this.#calculateNormal(southeast, center, south))
-                        .add(this.#calculateNormal(south, center, southwest))
-                        .add(this.#calculateNormal(southwest, center, west))
-                        .add(this.#calculateNormal(west, center, northwest))
-                        .add(this.#calculateNormal(northwest, center, north))
-                        .normalize());
-                normals.push(north.x, north.y, this.#calculateNormal(northCenter, north, northeast)
-                        .add(this.#calculateNormal(northeast, north, center))
-                        .add(this.#calculateNormal(center, north, northwest))
-                        .add(this.#calculateNormal(northwest, north, northCenter))
-                        .normalize());
-                normals.push(northeast.x, northeast.y, this.#calculateNormal(east, center, northeast)
-                        // TODO
-//                        .add(this.#calculateNormal(northwest, center, north))
-//                        .add(this.#calculateNormal(northwest, center, north))
-                        .add(this.#calculateNormal(northeast, center, east))
-                        .normalize());
-                normals.push(east.x, east.y, this.#calculateNormal(northeast, east, eastCenter)
-                        .add(this.#calculateNormal(eastCenter, east, southeast))
-                        .add(this.#calculateNormal(southeast, east, center))
-                        .add(this.#calculateNormal(center, east, northeast))
-                        .normalize());
-                normals.push(southeast.x, southeast.y, this.#calculateNormal(east, center, southeast)
-                    // TODO
-//                        .add(this.#calculateNormal(northwest, center, north))
-//                        .add(this.#calculateNormal(northwest, center, north))
-                        .add(this.#calculateNormal(southeast, center, south))
-                        .normalize());
-                normals.push(south.x, south.y, this.#calculateNormal(center, south, southeast)
-                        .add(this.#calculateNormal(southeast, south, southCenter))
-                        .add(this.#calculateNormal(southCenter, south, southwest))
-                        .add(this.#calculateNormal(southwest, south, center))
-                        .normalize());
-                normals.push(southwest.x, southwest.y, this.#calculateNormal(south, center, southeast)
-                    // TODO
-//                        .add(this.#calculateNormal(northwest, center, north))
-//                        .add(this.#calculateNormal(northwest, center, north))
-                        .add(this.#calculateNormal(southeast, center, west))
-                        .normalize());
-                normals.push(west.x, west.y, this.#calculateNormal(northwest, west, center)
-                        .add(this.#calculateNormal(center, west, southwest))
-                        .add(this.#calculateNormal(southwest, west, westCenter))
-                        .add(this.#calculateNormal(westCenter, west, northwest))
-                        .normalize());
-                normals.push(northwest.x, northwest.y, this.#calculateNormal(west, center, northwest)
-                // TODO
-//                        .add(this.#calculateNormal(northwest, center, north))
-//                        .add(this.#calculateNormal(northwest, center, north))
-                        .add(this.#calculateNormal(northwest, center, north))
-                        .normalize());
+                const lat = 2 * latitude + 1;
+                const long = 2 * longitude + 1;
+                const normal = this.#getNormalLattice(lat, long);
+                normals.push(normal.x, normal.y, normal.z);
+                for (let direction of Object.values(Direction)) {
+                    const foo = direction(lat, long); // TODO rename
+                    const normal = this.#getNormalLattice(foo.lat, foo.long);
+                    normals.push(normal.x, normal.y, normal.z);
+                }
             }
         }
         return normals;
@@ -211,6 +218,19 @@ class Garden {
         const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
         const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
         return this.#garden.terrains[lat * this.#garden.longitude + long];
+    }
+
+    #getPositionLattice(latitude, longitude) {
+        const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
+        const long = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
+        return new Vector(0.5 * longitude, 0.5 * latitude,
+            this.#positionLattice[lat * (2 * this.#garden.longitude + 1) + long].z);
+    }
+
+    #getNormalLattice(latitude, longitude) {
+        const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
+        const long = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
+        return this.#normalLattice[lat * (2 * this.#garden.longitude + 1) + long];
     }
 
     #getPosition(latitude, longitude, direction) {
