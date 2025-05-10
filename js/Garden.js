@@ -23,10 +23,6 @@ class Garden {
     #terrain;
     #positionLattice;
     #normalLattice;
-    #positions;
-    #normals;
-    #textureCoordinates;
-    #indices;
     #task;
 
     // TODO terrain blending
@@ -39,10 +35,6 @@ class Garden {
             this.#terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
-            this.#positions = this.#calculatePositions();
-            this.#normals = this.#calculateNormals();
-            this.#textureCoordinates = this.#calculateTextureCoordinates();
-            this.#indices = this.#calculateIndices();
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
                         position: new AttributeData(gl, this.#positions),
@@ -55,6 +47,82 @@ class Garden {
 
     render(projection, camera, model, light) {
         this.#task.render({projection, camera, model, terrain: this.#terrain, light});
+    }
+
+    get #positions() {
+        const positions = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                const lat = 2 * latitude + 1;
+                const long = 2 * longitude + 1;
+                const position = this.#getPositionLattice(lat, long);
+                positions.push(position.x, position.y, position.z);
+                for (let direction of Object.values(Direction)) {
+                    const dir = direction(lat, long);
+                    const position = this.#getPositionLattice(dir.lat, dir.long);
+                    positions.push(position.x, position.y, position.z);
+                }
+            }
+        }
+        return positions;
+    }
+
+    get #normals() {
+        const normals = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                const lat = 2 * latitude + 1;
+                const long = 2 * longitude + 1;
+                const normal = this.#getNormalLattice(lat, long);
+                normals.push(normal.x, normal.y, normal.z);
+                for (let direction of Object.values(Direction)) {
+                    const dir = direction(lat, long);
+                    const normal = this.#getNormalLattice(dir.lat, dir.long);
+                    normals.push(normal.x, normal.y, normal.z);
+                }
+            }
+        }
+        return normals;
+    }
+
+    get #textureCoordinates() { // TODO refactor to reduce size
+        const textureCoordinates = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
+                const sC = (terrain + 0.5) / Object.keys(Terrain).length;
+                const sE = (terrain + 1.0) / Object.keys(Terrain).length;
+                const sW = terrain / Object.keys(Terrain).length;
+                const tC = 0.5;
+                const tN = 0.0;
+                const tS = 1.0;
+                textureCoordinates.push(sC, tC, 1.0);
+                textureCoordinates.push(sC, tN, 1.0);
+                textureCoordinates.push(sE, tN, 1.0);
+                textureCoordinates.push(sE, tC, 1.0);
+                textureCoordinates.push(sE, tS, 1.0);
+                textureCoordinates.push(sC, tS, 1.0);
+                textureCoordinates.push(sW, tS, 1.0);
+                textureCoordinates.push(sW, tC, 1.0);
+                textureCoordinates.push(sW, tN, 1.0);
+            }
+        }
+        return textureCoordinates;
+    }
+
+    get #indices() {
+        const indices = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
+                    const next = (direction + 1) % Object.keys(Direction).length;
+                    const offset = latitude * this.#garden.longitude * (Object.keys(Direction).length + 1)
+                            + longitude * (Object.keys(Direction).length + 1);
+                    indices.push(offset + direction + 1, offset, offset + next + 1);
+                }
+            }
+        }
+        return indices;
     }
 
     #calculatePositionLattice() {
@@ -132,82 +200,6 @@ class Garden {
         return lattice;
     }
 
-    #calculatePositions() {
-        const positions = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const lat = 2 * latitude + 1;
-                const long = 2 * longitude + 1;
-                const position = this.#getPositionLattice(lat, long);
-                positions.push(position.x, position.y, position.z);
-                for (let direction of Object.values(Direction)) {
-                    const foo = direction(lat, long); // TODO rename
-                    const position = this.#getPositionLattice(foo.lat, foo.long);
-                    positions.push(position.x, position.y, position.z);
-                }
-            }
-        }
-        return positions;
-    }
-
-    #calculateNormals() {
-        const normals = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const lat = 2 * latitude + 1;
-                const long = 2 * longitude + 1;
-                const normal = this.#getNormalLattice(lat, long);
-                normals.push(normal.x, normal.y, normal.z);
-                for (let direction of Object.values(Direction)) {
-                    const foo = direction(lat, long); // TODO rename
-                    const normal = this.#getNormalLattice(foo.lat, foo.long);
-                    normals.push(normal.x, normal.y, normal.z);
-                }
-            }
-        }
-        return normals;
-    }
-
-    #calculateTextureCoordinates() {
-        const textureCoordinates = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
-                const sC = (terrain + 0.5) / Object.keys(Terrain).length;
-                const sE = (terrain + 1.0) / Object.keys(Terrain).length;
-                const sW = terrain / Object.keys(Terrain).length;
-                const tC = 0.5;
-                const tN = 0.0;
-                const tS = 1.0;
-                textureCoordinates.push(sC, tC, 1.0);
-                textureCoordinates.push(sC, tN, 1.0);
-                textureCoordinates.push(sE, tN, 1.0);
-                textureCoordinates.push(sE, tC, 1.0);
-                textureCoordinates.push(sE, tS, 1.0);
-                textureCoordinates.push(sC, tS, 1.0);
-                textureCoordinates.push(sW, tS, 1.0);
-                textureCoordinates.push(sW, tC, 1.0);
-                textureCoordinates.push(sW, tN, 1.0);
-            }
-        }
-        return textureCoordinates;
-    }
-
-    #calculateIndices() {
-        const indices = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
-                    const next = (direction + 1) % Object.keys(Direction).length;
-                    const offset = latitude * this.#garden.longitude * (Object.keys(Direction).length + 1)
-                            + longitude * (Object.keys(Direction).length + 1);
-                    indices.push(offset + direction + 1, offset, offset + next + 1);
-                }
-            }
-        }
-        return indices;
-    }
-
     #getAltitude(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
         const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
@@ -231,14 +223,6 @@ class Garden {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const long = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
         return this.#normalLattice[lat * (2 * this.#garden.longitude + 1) + long];
-    }
-
-    #getPosition(latitude, longitude, direction) {
-        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
-        const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
-        const offset = (lat * this.#garden.longitude + long) * (Object.keys(Direction).length + 1)
-                + ((direction == null) ? 0 : (Object.values(Direction).indexOf(direction) + 1));
-        return new Vector(this.#positions[offset], this.#positions[offset + 1], this.#positions[offset + 2]);
     }
 
     #calculateNormal(a, b, c) {
