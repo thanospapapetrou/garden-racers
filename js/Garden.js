@@ -55,11 +55,11 @@ class Garden {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 const lat = 2 * latitude + 1;
                 const long = 2 * longitude + 1;
-                const position = this.#getPositionLattice(lat, long);
+                const position = this.#getPosition(lat, long);
                 positions.push(position.x, position.y, position.z);
                 for (let direction of Object.values(Direction)) {
                     const dir = direction(lat, long);
-                    const position = this.#getPositionLattice(dir.lat, dir.long);
+                    const position = this.#getPosition(dir.lat, dir.long);
                     positions.push(position.x, position.y, position.z);
                 }
             }
@@ -73,11 +73,11 @@ class Garden {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 const lat = 2 * latitude + 1;
                 const long = 2 * longitude + 1;
-                const normal = this.#getNormalLattice(lat, long);
+                const normal = this.#getNormal(lat, long);
                 normals.push(normal.x, normal.y, normal.z);
                 for (let direction of Object.values(Direction)) {
                     const dir = direction(lat, long);
-                    const normal = this.#getNormalLattice(dir.lat, dir.long);
+                    const normal = this.#getNormal(dir.lat, dir.long);
                     normals.push(normal.x, normal.y, normal.z);
                 }
             }
@@ -152,15 +152,15 @@ class Garden {
         const lattice = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                const c = this.#getPositionLattice(latitude, longitude);
-                const n = this.#getPositionLattice(latitude + 1, longitude);
-                const ne = this.#getPositionLattice(latitude + 1, longitude + 1);
-                const e = this.#getPositionLattice(latitude, longitude + 1);
-                const se = this.#getPositionLattice(latitude - 1, longitude + 1);
-                const s = this.#getPositionLattice(latitude - 1, longitude);
-                const sw = this.#getPositionLattice(latitude - 1, longitude - 1);
-                const w = this.#getPositionLattice(latitude, longitude - 1);
-                const nw = this.#getPositionLattice(latitude + 1, longitude - 1);
+                const c = this.#getPosition(latitude, longitude);
+                const n = this.#getPosition(latitude + 1, longitude);
+                const ne = this.#getPosition(latitude + 1, longitude + 1);
+                const e = this.#getPosition(latitude, longitude + 1);
+                const se = this.#getPosition(latitude - 1, longitude + 1);
+                const s = this.#getPosition(latitude - 1, longitude);
+                const sw = this.#getPosition(latitude - 1, longitude - 1);
+                const w = this.#getPosition(latitude, longitude - 1);
+                const nw = this.#getPosition(latitude + 1, longitude - 1);
                 // TODO refactor to reduce size
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
                     lattice.push(this.#calculateNormal(n, c, ne)
@@ -212,14 +212,14 @@ class Garden {
         return this.#garden.terrains[lat * this.#garden.longitude + long];
     }
 
-    #getPositionLattice(latitude, longitude) {
+    #getPosition(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const long = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
         return new Vector(0.5 * longitude, 0.5 * latitude,
             this.#positionLattice[lat * (2 * this.#garden.longitude + 1) + long].z);
     }
 
-    #getNormalLattice(latitude, longitude) {
+    #getNormal(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const long = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
         return this.#normalLattice[lat * (2 * this.#garden.longitude + 1) + long];
