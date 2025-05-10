@@ -26,8 +26,6 @@ class Garden {
     #task;
 
     // TODO terrain blending
-    // TODO map mirroring
-    // TODO normals
 
     constructor(gl, url) {
         return (async () => {
@@ -89,13 +87,20 @@ class Garden {
         const textureCoordinates = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                // TODO
+                const terrains = [];
+                terrains[null] = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
+                for (let direction of Object.values(Direction)) {
+                    const dir = direction(latitude, longitude);
+                    terrains[direction] = Object.keys(Terrain).indexOf(this.#getTerrain(dir.lat, dir.long));
+                }
                 const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
                 const sC = (terrain + 0.5) / Object.keys(Terrain).length;
-                const sE = (terrain + 1.0) / Object.keys(Terrain).length;
-                const sW = terrain / Object.keys(Terrain).length;
+                const sE = (terrain + 0.75) / Object.keys(Terrain).length;
+                const sW = (terrain + 0.25) / Object.keys(Terrain).length;
                 const tC = 0.5;
-                const tN = 0.0;
-                const tS = 1.0;
+                const tN = 0.25;
+                const tS = 0.75;
                 textureCoordinates.push(sC, tC, 1.0);
                 textureCoordinates.push(sC, tN, 1.0);
                 textureCoordinates.push(sE, tN, 1.0);
@@ -185,13 +190,13 @@ class Garden {
     }
 
     #getAltitude(latitude, longitude) {
-        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
+        const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
         return this.#garden.altitudes[lat * this.#garden.longitude + long];
     }
 
     #getTerrain(latitude, longitude) {
-        const lat = Math.min(Math.max(latitude, 0), this.#garden.latitude - 1);
+        const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const long = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
         return this.#garden.terrains[lat * this.#garden.longitude + long];
     }
