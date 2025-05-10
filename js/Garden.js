@@ -135,12 +135,16 @@ class Garden {
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
                     altitude = this.#getAltitude(lat, long);
                 } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
-                    altitude = (this.#getAltitude(lat, long + 1) + this.#getAltitude(lat, long)) / 2.0;
+                    altitude = (this.#getAltitude(lat, long + 1)
+                            + this.#getAltitude(lat, long)) / 2.0;
                 } else if (longitude % 2 == 1) { // on parallel between meridians; average north and south
-                    altitude = (this.#getAltitude(lat + 1, long) + this.#getAltitude(lat, long)) / 2.0;
+                    altitude = (this.#getAltitude(lat + 1, long)
+                            + this.#getAltitude(lat, long)) / 2.0;
                 } else { // on parallel and on meridian; average all directions
-                    altitude = (this.#getAltitude(lat + 1, long + 1) + this.#getAltitude(lat, long + 1)
-                            + this.#getAltitude(lat, long) + this.#getAltitude(lat + 1, long)) / 4.0;
+                    altitude = (this.#getAltitude(lat + 1, long + 1)
+                            + this.#getAltitude(lat, long + 1)
+                            + this.#getAltitude(lat, long)
+                            + this.#getAltitude(lat + 1, long)) / 4.0;
                 }
                 lattice.push(new Vector(0.5 * longitude, 0.5 * latitude, altitude));
             }
@@ -152,48 +156,28 @@ class Garden {
         const lattice = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
-                const c = this.#getPosition(latitude, longitude);
-                const n = this.#getPosition(latitude + 1, longitude);
-                const ne = this.#getPosition(latitude + 1, longitude + 1);
-                const e = this.#getPosition(latitude, longitude + 1);
-                const se = this.#getPosition(latitude - 1, longitude + 1);
-                const s = this.#getPosition(latitude - 1, longitude);
-                const sw = this.#getPosition(latitude - 1, longitude - 1);
-                const w = this.#getPosition(latitude, longitude - 1);
-                const nw = this.#getPosition(latitude + 1, longitude - 1);
-                // TODO refactor to reduce size
-                if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians
-                    lattice.push(this.#calculateNormal(n, c, ne)
-                            .add(this.#calculateNormal(ne, c, e))
-                            .add(this.#calculateNormal(e, c, se))
-                            .add(this.#calculateNormal(se, c, s))
-                            .add(this.#calculateNormal(s, c, sw))
-                            .add(this.#calculateNormal(sw, c, w))
-                            .add(this.#calculateNormal(w, c, nw))
-                            .add(this.#calculateNormal(nw, c, n))
-                            .normalize());
-                } else if (latitude % 2 == 1) { // between parallels and on meridian
-                    lattice.push(this.#calculateNormal(n, c, e)
-                            .add(this.#calculateNormal(e, c, s))
-                            .add(this.#calculateNormal(s, c, w))
-                            .add(this.#calculateNormal(w, c, n))
-                            .normalize());
-                } else if (longitude % 2 == 1) { // on parallel between meridians
-                    lattice.push(this.#calculateNormal(n, c, e)
-                            .add(this.#calculateNormal(e, c, s))
-                            .add(this.#calculateNormal(s, c, w))
-                            .add(this.#calculateNormal(w, c, n))
-                            .normalize());
-                } else { // on parallel and on meridian
-                    lattice.push(this.#calculateNormal(n, c, ne)
-                            .add(this.#calculateNormal(ne, c, e))
-                            .add(this.#calculateNormal(e, c, se))
-                            .add(this.#calculateNormal(se, c, s))
-                            .add(this.#calculateNormal(s, c, sw))
-                            .add(this.#calculateNormal(sw, c, w))
-                            .add(this.#calculateNormal(w, c, nw))
-                            .add(this.#calculateNormal(nw, c, n))
-                            .normalize());
+                const positions = [];
+                positions[null] = this.#getPosition(latitude, longitude);
+                for (let direction of Object.values(Direction)) {
+                    const dir = direction(latitude, longitude);
+                    positions[direction] = this.#getPosition(dir.lat, dir.long);
+                }
+                if ((latitude % 2 == 1) ^ (longitude % 2 == 1)) {
+                    let normal = new Vector(0.0, 0.0, 0.0);
+                    for (let direction = 0; direction < Object.keys(Direction).length; direction += 2) {
+                        const dir = Object.values(Direction)[direction];
+                        const next = Object.values(Direction)[(direction + 2) % Object.keys(Direction).length];
+                        normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
+                    }
+                    lattice.push(normal.normalize());
+                } else {
+                    let normal = new Vector(0.0, 0.0, 0.0);
+                    for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
+                        const dir = Object.values(Direction)[direction];
+                        const next = Object.values(Direction)[(direction + 1) % Object.keys(Direction).length];
+                        normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
+                    }
+                    lattice.push(normal.normalize());
                 }
             }
         }
