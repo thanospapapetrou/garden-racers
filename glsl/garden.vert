@@ -22,50 +22,44 @@ in vec3 normal;
 out vec3 vertexNormal;
 out vec3[DIRECTIONS] vertexTextureCoordinates;
 
-vec3 foo(in int terrain, in float s, in float t, float p) { // TODO rename
+vec3 getTextureCoordinates(in int terrain, in float s, in float t, float p) { // TODO rename
     return vec3((float(terrain) + s) / float(TERRAINS), t, p);
-
 }
 
 vec3[DIRECTIONS] calculateTextureCoordinates() {
     vec3[DIRECTIONS] coordinates;
-    float terrain = 0.0;
-    float sC = (terrain + 0.5) / float(TERRAINS);
-    float sE = (terrain + 0.75) / float(TERRAINS);
-    float sW = (terrain + 0.25) / float(TERRAINS);
-    float tC = 0.5;
-    float tN = 0.25;
-    float tS = 0.75;
+    int terrain = 3;
+    int next = 4;
     switch (gl_VertexID % DIRECTIONS) {
     case CENTER:
-        coordinates[0] = foo(int(terrain), 0.5, 0.5, 0.5); // TODO rename and make terrain int
-        coordinates[1] = foo(int(terrain) + 1, 0.5, 0.25, 0.5); // TODO rename and make terrain int
+        coordinates[0] = getTextureCoordinates(terrain, 0.5, 0.5, 1.0);
+        // coordinates[1] = getTextureCoordinates(next, 0.5, 0.25, 0.5); // TODO rename and make terrain int
         break;
     case NORTH:
-        coordinates[0] = foo(int(terrain), 0.5, 0.25, 0.5); // TODO rename and make terrain int
-        coordinates[1] = foo(int(terrain) + 1, 0.5, 0.25, 0.5); // TODO rename and make terrain int
+        coordinates[0] = getTextureCoordinates(terrain, 0.5, 0.25, 1.0);
+        // coordinates[1] = getTextureCoordinates(next, 0.5, 0.75, 0.5); // TODO rename and make terrain int
         break;
     case NORTHEAST:
-        coordinates[0] = foo(int(terrain), 0.75, 0.25, 0.5); // TODO rename and make terrain int
-        coordinates[1] = foo(int(terrain) + 1, 0.75, 0.25, 0.5); // TODO rename and make terrain int
+        coordinates[0] = getTextureCoordinates(terrain, 0.75, 0.25, 1.0);
+        // coordinates[1] = getTextureCoordinates(next, 0.75, 0.25, 0.5); // TODO rename and make terrain int
         break;
     case EAST:
-        coordinates[0] = vec3(sE, tC, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.75, 0.5, 1.0);
         break;
     case SOUTHEAST:
-        coordinates[0] = vec3(sE, tS, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.75, 0.75, 1.0);
         break;
     case SOUTH:
-        coordinates[0] = vec3(sC, tS, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.5, 0.75, 1.0);
         break;
     case SOUTHWEST:
-        coordinates[0] = vec3(sW, tS, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.25, 0.75, 1.0);
         break;
     case WEST:
-        coordinates[0] = vec3(sW, tC, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.25, 0.5, 1.0);
         break;
     case NORTHWEST:
-        coordinates[0] = vec3(sW, tN, 1.0);
+        coordinates[0] = getTextureCoordinates(terrain, 0.25, 0.25, 1.0);
         break;
     }
     return coordinates;
