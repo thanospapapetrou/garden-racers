@@ -1,7 +1,7 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinates'];
+    static #ATTRIBUTES = ['position', 'normal'];
     static #IMAGE_TERRAIN = './img/terrain.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
@@ -26,6 +26,7 @@ class Garden {
     #task;
 
     // TODO terrain blending
+    // TODO indices long
 
     constructor(gl, url) {
         return (async () => {
@@ -36,8 +37,7 @@ class Garden {
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
                         position: new AttributeData(gl, this.#positions),
-                        normal: new AttributeData(gl, this.#normals),
-                        textureCoordinates: new AttributeData(gl, this.#textureCoordinates)
+                        normal: new AttributeData(gl, this.#normals)
                     }, new IndexData(gl, this.#indices));
             return this;
         })();
@@ -81,38 +81,6 @@ class Garden {
             }
         }
         return normals;
-    }
-
-    get #textureCoordinates() { // TODO refactor to reduce size
-        const textureCoordinates = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                // TODO
-                const terrains = [];
-                terrains[null] = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
-                for (let direction of Object.values(Direction)) {
-                    const dir = direction(latitude, longitude);
-                    terrains[direction] = Object.keys(Terrain).indexOf(this.#getTerrain(dir.lat, dir.long));
-                }
-                const terrain = Object.keys(Terrain).indexOf(this.#getTerrain(latitude, longitude));
-                const sC = (terrain + 0.5) / Object.keys(Terrain).length;
-                const sE = (terrain + 0.75) / Object.keys(Terrain).length;
-                const sW = (terrain + 0.25) / Object.keys(Terrain).length;
-                const tC = 0.5;
-                const tN = 0.25;
-                const tS = 0.75;
-                textureCoordinates.push(sC, tC, 1.0);
-                textureCoordinates.push(sC, tN, 1.0);
-                textureCoordinates.push(sE, tN, 1.0);
-                textureCoordinates.push(sE, tC, 1.0);
-                textureCoordinates.push(sE, tS, 1.0);
-                textureCoordinates.push(sC, tS, 1.0);
-                textureCoordinates.push(sW, tS, 1.0);
-                textureCoordinates.push(sW, tC, 1.0);
-                textureCoordinates.push(sW, tN, 1.0);
-            }
-        }
-        return textureCoordinates;
     }
 
     get #indices() {
