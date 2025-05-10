@@ -1,6 +1,15 @@
 #version 300 es
 
-#define DIRECTIONS 8
+#define CENTER 0
+#define NORTH 1
+#define NORTHEAST 2
+#define EAST 3
+#define SOUTHEAST 4
+#define SOUTH 5
+#define SOUTHWEST 6
+#define WEST 7
+#define NORTHWEST 8
+#define DIRECTIONS 9
 #define TERRAINS 5
 
 uniform mat4 projection;
@@ -11,45 +20,59 @@ in vec3 position;
 in vec3 normal;
 
 out vec3 vertexNormal;
-out vec3 vertexTextureCoordinates;
+out vec3[DIRECTIONS] vertexTextureCoordinates;
 
-void main(void) {
-    gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
-    vertexNormal = mat3(transpose(inverse(model))) * normal;
+vec3 foo(in int terrain, in float s, in float t, float p) { // TODO rename
+    return vec3((float(terrain) + s) / float(TERRAINS), t, p);
 
-    float terrain = 1.0;
+}
+
+vec3[DIRECTIONS] calculateTextureCoordinates() {
+    vec3[DIRECTIONS] coordinates;
+    float terrain = 0.0;
     float sC = (terrain + 0.5) / float(TERRAINS);
     float sE = (terrain + 0.75) / float(TERRAINS);
     float sW = (terrain + 0.25) / float(TERRAINS);
     float tC = 0.5;
     float tN = 0.25;
     float tS = 0.75;
-    switch (gl_VertexID % (DIRECTIONS + 1)) {
-    case 0: // center
-        vertexTextureCoordinates = vec3(sC, tC, 1.0);
+    switch (gl_VertexID % DIRECTIONS) {
+    case CENTER:
+        coordinates[0] = foo(int(terrain), 0.5, 0.5, 0.5); // TODO rename and make terrain int
+        coordinates[1] = foo(int(terrain) + 1, 0.5, 0.25, 0.5); // TODO rename and make terrain int
         break;
-    case 1: // north
-        vertexTextureCoordinates = vec3(sC, tN, 1.0);
+    case NORTH:
+        coordinates[0] = foo(int(terrain), 0.5, 0.25, 0.5); // TODO rename and make terrain int
+        coordinates[1] = foo(int(terrain) + 1, 0.5, 0.25, 0.5); // TODO rename and make terrain int
         break;
-    case 2: // northeast
-    vertexTextureCoordinates = vec3(sE, tN, 1.0);
+    case NORTHEAST:
+        coordinates[0] = foo(int(terrain), 0.75, 0.25, 0.5); // TODO rename and make terrain int
+        coordinates[1] = foo(int(terrain) + 1, 0.75, 0.25, 0.5); // TODO rename and make terrain int
         break;
-    case 3: // east
-        vertexTextureCoordinates = vec3(sE, tC, 1.0);
+    case EAST:
+        coordinates[0] = vec3(sE, tC, 1.0);
         break;
-    case 4: // southeast
-        vertexTextureCoordinates = vec3(sE, tS, 1.0);
+    case SOUTHEAST:
+        coordinates[0] = vec3(sE, tS, 1.0);
         break;
-    case 5: // northeast
-        vertexTextureCoordinates = vec3(sC, tS, 1.0);
+    case SOUTH:
+        coordinates[0] = vec3(sC, tS, 1.0);
         break;
-    case 6: // northeast
-        vertexTextureCoordinates = vec3(sW, tS, 1.0);
+    case SOUTHWEST:
+        coordinates[0] = vec3(sW, tS, 1.0);
         break;
-    case 7: // northeast
-        vertexTextureCoordinates = vec3(sW, tC, 1.0);
+    case WEST:
+        coordinates[0] = vec3(sW, tC, 1.0);
         break;
-    case 8: // northeast
-        vertexTextureCoordinates = vec3(sW, tN, 1.0);
+    case NORTHWEST:
+        coordinates[0] = vec3(sW, tN, 1.0);
+        break;
     }
+    return coordinates;
+}
+
+void main(void) {
+    gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
+    vertexNormal = mat3(transpose(inverse(model))) * normal;
+    vertexTextureCoordinates = calculateTextureCoordinates();
 }

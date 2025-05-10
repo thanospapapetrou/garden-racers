@@ -1,5 +1,7 @@
 #version 300 es
 
+#define DIRECTIONS 9
+
 precision lowp float;
 
 struct Directional {
@@ -16,12 +18,15 @@ uniform sampler2D terrain;
 uniform Light light;
 
 in vec3 vertexNormal;
-in vec3 vertexTextureCoordinates;
+in vec3[DIRECTIONS] vertexTextureCoordinates;
 
 out vec4 fragmentColor;
 
 void main(void) {
-    fragmentColor = texture(terrain, vertexTextureCoordinates.st);
+    fragmentColor = vec4(0.0, 0.0, 0.0, 1.0);
+    for (int i = 0; i < DIRECTIONS; i++) {
+        fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
+    }
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);
 }
