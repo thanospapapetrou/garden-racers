@@ -60,19 +60,13 @@ vec3 getTextureCoordinates(const in int terrain, const in float s, const in floa
 vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec2 latitudeLongitude, const in int direction) {
     vec3[DIRECTIONS] coordinates;
     int components = 0; // TODO improve
-    // TODO for (int dir = 0; dir < DIRECTIONS; dir++) {
-    for (int dir = 0; dir < 1; dir++) {
+    for (int dir = 0; dir < DIRECTIONS; dir++) {
         int terrain = getTerrain(latitudeLongitude + getDirection(dir));
         float s = 0.25 * float(getDirection(direction).y) - 0.5 * float(getDirection(dir).y) + 0.5;
         float t = -0.25 * float(getDirection(direction).x) + 0.5 * float(getDirection(dir).x) + 0.5;
-        float p = ((s < 0.0) || (s > 1.0) || (t < 0.0) || (t > 1.0)) ? 0.0 : 1.0;
-        components += (p > 0.0) ? 1 : 0;
+        float p = max(1.0 - sqrt(pow(0.5 - s, 2.0) + pow(0.5 - t, 2.0)), 0.0);
         coordinates[dir] = getTextureCoordinates(terrain, s, t, p);
     }
-    // TODO
-    //for (int dir = 0; dir < DIRECTIONS; dir++) {
-    //    coordinates[dir].p = 1.0 / float(components);
-    //}
     return coordinates;
 }
 
