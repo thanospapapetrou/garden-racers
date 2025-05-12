@@ -99,6 +99,7 @@ class Garden {
     #calculatePositionLattice() {
         const lattice = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            lattice[latitude] = [];
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const lat = Math.floor((latitude - 1) / 2);
                 const lng = Math.floor((longitude - 1) / 2);
@@ -117,7 +118,7 @@ class Garden {
                             + this.#getAltitude(lat, lng)
                             + this.#getAltitude(lat + 1, lng)) / 4.0;
                 }
-                lattice.push(new Vector(0.5 * longitude, 0.5 * latitude, altitude));
+                lattice[latitude][longitude] = new Vector(0.5 * longitude, 0.5 * latitude, altitude);
             }
         }
         return lattice;
@@ -126,6 +127,7 @@ class Garden {
     #calculateNormalLattice() {
         const lattice = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
+            lattice[latitude] = [];
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const positions = [];
                 positions[null] = this.#getPosition(latitude, longitude);
@@ -133,23 +135,21 @@ class Garden {
                     positions[direction] = this.#getPosition(latitude + Direction[direction].lat,
                             longitude + Direction[direction].lng);
                 }
+                let normal = new Vector(0.0, 0.0, 0.0);
                 if ((latitude % 2 == 1) ^ (longitude % 2 == 1)) {
-                    let normal = new Vector(0.0, 0.0, 0.0);
                     for (let direction = 0; direction < Object.keys(Direction).length; direction += 2) {
                         const dir = Object.keys(Direction)[direction];
                         const next = Object.keys(Direction)[(direction + 2) % Object.keys(Direction).length];
                         normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
                     }
-                    lattice.push(normal.normalize());
                 } else {
-                    let normal = new Vector(0.0, 0.0, 0.0);
                     for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
                         const dir = Object.keys(Direction)[direction];
                         const next = Object.keys(Direction)[(direction + 1) % Object.keys(Direction).length];
                         normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
                     }
-                    lattice.push(normal.normalize());
                 }
+                lattice[latitude][longitude] = normal.normalize();
             }
         }
         return lattice;
@@ -161,7 +161,7 @@ class Garden {
         return this.#garden.altitudes[lat * this.#garden.longitude + lng];
     }
 
-    #getTerrain(latitude, longitude) {
+    #getTerrain(latitude, longitude) { // TODO is this required?
         const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const lng = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
         return this.#garden.terrains[lat * this.#garden.longitude + lng];
@@ -171,13 +171,13 @@ class Garden {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const lng = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
         return new Vector(0.5 * longitude, 0.5 * latitude,
-            this.#positionLattice[lat * (2 * this.#garden.longitude + 1) + lng].z);
+            this.#positionLattice[lat][lng].z);
     }
 
     #getNormal(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const lng = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
-        return this.#normalLattice[lat * (2 * this.#garden.longitude + 1) + lng];
+        return this.#normalLattice[lat][lng];
     }
 
     #calculateNormal(a, b, c) {
