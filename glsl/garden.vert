@@ -31,7 +31,7 @@ ivec2 getDirection(const in int direction) {
     case NORTH:
         return ivec2(1, 0);
     case NORTHEAST:
-        return ivec2(1, 0);
+        return ivec2(1, 1);
     case EAST:
         return ivec2(0, 1);
     case SOUTHEAST:
@@ -59,66 +59,20 @@ vec3 getTextureCoordinates(const in int terrain, const in float s, const in floa
 
 vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec2 latitudeLongitude, const in int direction) {
     vec3[DIRECTIONS] coordinates;
-    int[DIRECTIONS] terrains;
-    for (int dir = 0; dir < DIRECTIONS; dir++) {
-        terrains[dir] = getTerrain(latitudeLongitude + getDirection(dir));
+    int components = 0; // TODO improve
+    // TODO for (int dir = 0; dir < DIRECTIONS; dir++) {
+    for (int dir = 0; dir < 1; dir++) {
+        int terrain = getTerrain(latitudeLongitude + getDirection(dir));
+        float s = 0.25 * float(getDirection(direction).y) - 0.5 * float(getDirection(dir).y) + 0.5;
+        float t = -0.25 * float(getDirection(direction).x) + 0.5 * float(getDirection(dir).x) + 0.5;
+        float p = ((s < 0.0) || (s > 1.0) || (t < 0.0) || (t > 1.0)) ? 0.0 : 1.0;
+        components += (p > 0.0) ? 1 : 0;
+        coordinates[dir] = getTextureCoordinates(terrain, s, t, p);
     }
-    switch (direction) {
-    case CENTER:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.5, 0.5, 0.25);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.5, 1.0, 0.25);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 1.0, 0.25);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.5, 0.25);
-        break;
-    case NORTH:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.5, 0.25, 0.25);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.5, 0.75, 0.25);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.75, 0.25);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.25, 0.25);
-        break;
-    case NORTHEAST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.75, 0.25, 0.25);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.75, 0.75, 0.25);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.25, 0.75, 0.25);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.25, 0.25, 0.25);
-        break;
-    case EAST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.75, 0.5, 0.25);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.75, 1.0, 0.25);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.25, 1.0, 0.25);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.25, 0.50, 0.25);
-        break;
-    case SOUTHEAST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.75, 0.75, 0.5);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.0, 0.0, 0.0);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.0, 0.0);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.25, 0.75, 0.5);
-        break;
-    case SOUTH:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.5, 0.75, 0.5);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.0, 0.0, 0.0);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.0, 0.0);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.75, 0.5);
-        break;
-    case SOUTHWEST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.25, 0.75, 1.0);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.0, 0.0, 0.0);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.0, 0.0);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.00, 0.0);
-        break;
-    case WEST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.25, 0.5, 0.5);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.25, 1.0, 0.5);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.0, 0.0);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.00, 0.0);
-        break;
-    case NORTHWEST:
-        coordinates[CENTER] = getTextureCoordinates(terrains[CENTER], 0.25, 0.25, 0.5);
-        coordinates[NORTH] = getTextureCoordinates(terrains[NORTH], 0.25, 0.75, 0.5);
-        coordinates[NORTHEAST] = getTextureCoordinates(terrains[NORTHEAST], 0.0, 0.0, 0.0);
-        coordinates[EAST] = getTextureCoordinates(terrains[EAST], 0.0, 0.00, 0.0);
-        break;
-    }
+    // TODO
+    //for (int dir = 0; dir < DIRECTIONS; dir++) {
+    //    coordinates[dir].p = 1.0 / float(components);
+    //}
     return coordinates;
 }
 
