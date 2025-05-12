@@ -26,6 +26,7 @@ class Garden {
     #task;
 
     // TODO terrain blending
+    // TODO attribute max type is mat3 (mat4 actually)
 
     constructor(gl, url) {
         return (async () => {

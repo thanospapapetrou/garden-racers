@@ -1,8 +1,8 @@
 #version 300 es
 
-#define DIRECTIONS 9
-
 precision lowp float;
+
+#define DIRECTIONS 9
 
 struct Directional {
     vec3 color;
