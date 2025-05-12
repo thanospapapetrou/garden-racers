@@ -26,7 +26,6 @@ class Garden {
     #task;
 
     // TODO terrain blending
-    // TODO indices long
 
     constructor(gl, url) {
         return (async () => {

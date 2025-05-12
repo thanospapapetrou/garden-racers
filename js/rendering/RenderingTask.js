@@ -24,7 +24,7 @@ class RenderingTask {
         this.#gl.useProgram(this.#renderer.program);
         this.#setUniforms(this.#renderer.uniforms, uniforms);
         this.#gl.bindVertexArray(this.#array);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_SHORT, 0);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
     }
 
