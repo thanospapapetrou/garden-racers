@@ -4,6 +4,8 @@ class Texture {
     static #ERROR_LOADING = (url) => `Error loading ${url}`;
 
     #unit;
+    #width;
+    #height;
 
     constructor(gl, unit, url) {
         return (async () => {
@@ -16,6 +18,8 @@ class Texture {
                 image.src = url;
             });
             this.#unit = unit;
+            this.#width = image.width;
+            this.#height = image.height;
             const texture = gl.createTexture();
             gl.activeTexture(this.#unit);
             gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -31,5 +35,13 @@ class Texture {
 
     get unit() {
         return this.#unit;
+    }
+
+    get width() {
+        return this.#width;
+    }
+
+    get height() {
+        return this.#height();
     }
 }

@@ -25,10 +25,12 @@ out vec4 fragmentColor;
 
 void main(void) {
     fragmentColor = vec4(0.0, 0.0, 0.0, 1.0);
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 1; i++) { // TODO include all directions
         fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
     }
-    fragmentColor.rgb = vec3(test, 0.0, 0.0);
+    if ((0.4 < test) && (test < 0.6)) {
+        fragmentColor.rgb = vec3(1.0, 1.0, 1.0);
+    }
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);
 }

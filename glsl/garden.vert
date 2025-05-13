@@ -13,18 +13,14 @@ in vec3 normal;
 
 out vec3 vertexNormal;
 out vec3[DIRECTIONS] vertexTextureCoordinates;
-out float test; // TODO remove
+out float test;
 
 vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec3 latLngDir) {
     vec3[DIRECTIONS] coordinates;
     for (int dir = 0; dir < DIRECTIONS; dir++) {
         coordinates[dir] = texture(textureCoordinates, vec2((float(latLngDir.x * latLng.y * DIRECTIONS * DIRECTIONS
-                + latLngDir.y * DIRECTIONS * DIRECTIONS + latLngDir.z * DIRECTIONS + dir) + 0.5) / float(latLng.x
-                * latLng.y * DIRECTIONS * DIRECTIONS), 0.5)).stp;
-        // TODO fix
-        coordinates[dir].s += 0.1;
-        coordinates[dir].t = 0.5;
-        coordinates[dir].p = 1.0;
+                + latLngDir.y * DIRECTIONS * DIRECTIONS + latLngDir.z * DIRECTIONS + dir) + 0.5)
+                / float(latLng.x * latLng.y * DIRECTIONS * DIRECTIONS), 0.5)).stp;
     }
     return coordinates;
 }
@@ -34,5 +30,5 @@ void main(void) {
     vertexNormal = mat3(transpose(inverse(model))) * normal;
     vertexTextureCoordinates = calculateTextureCoordinates(ivec3(gl_VertexID / DIRECTIONS / latLng.y,
             gl_VertexID / DIRECTIONS % latLng.y, gl_VertexID % DIRECTIONS));
-    test = vertexTextureCoordinates[0].p;
+    test = vertexTextureCoordinates[0].s;
 }

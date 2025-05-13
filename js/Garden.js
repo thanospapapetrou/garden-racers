@@ -108,22 +108,27 @@ class Garden {
         // TODO make s and t index half pixels
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                coordinates.push(this.#textureLattice[null][null].x,
-                        this.#textureLattice[null][null].y,
-                        this.#textureLattice[null][null].z);
-                        for (let dir of Object.keys(Direction)) {
-                            coordinates.push(this.#textureLattice[null][dir].x,
-                                    this.#textureLattice[null][dir].y,
-                                    this.#textureLattice[null][dir].z);
-                        }
+                const terrain = this.#getTerrain(latitude, longitude);
+                coordinates.push(((this.#textureLattice[null][null].x + terrain.s) * 4 + 0.5) / 8,
+                        ((this.#textureLattice[null][null].y + terrain.t) * 4 + 0.5) / 8,
+                        1.0);
+//                        this.#textureLattice[null][null].z); // TODO
+                for (let dir of Object.keys(Direction)) {
+                    coordinates.push(((this.#textureLattice[null][dir].x + terrain.s) * 4 + 0.5) / 8,
+                            ((this.#textureLattice[null][dir].y + terrain.t) * 4 + 0.5) / 8,
+                            1.0);
+                            //this.#textureLattice[null][dir].z); TODO
+                }
                 for (let direction of Object.keys(Direction)) {
-                    coordinates.push(this.#textureLattice[direction][null].x,
-                            this.#textureLattice[direction][null].y,
-                            this.#textureLattice[direction][null].z);
+                    coordinates.push(((this.#textureLattice[direction][null].x + terrain.s) * 4 + 0.5) / 8,
+                            ((this.#textureLattice[direction][null].y + terrain.t) * 4 + 0.5) / 8,
+                            1.0);
+                            // this.#textureLattice[direction][null].z); TODO
                     for (let dir of Object.keys(Direction)) {
-                        coordinates.push(this.#textureLattice[direction][dir].x,
-                                this.#textureLattice[direction][dir].y,
-                                this.#textureLattice[direction][dir].z);
+                        coordinates.push(((this.#textureLattice[direction][dir].x + terrain.s) * 4 + 0.5) / 8,
+                                ((this.#textureLattice[direction][dir].y + terrain.t) * 4 + 0.5) / 8,
+                                1.0);
+                                // this.#textureLattice[direction][dir].z); TODO
                     }
                 }
             }
@@ -213,10 +218,10 @@ class Garden {
         return this.#garden.altitudes[lat * this.#garden.longitude + lng];
     }
 
-    #getTerrain(latitude, longitude) { // TODO is this required?
+    #getTerrain(latitude, longitude) {
         const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const lng = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
-        return this.#garden.terrains[lat * this.#garden.longitude + lng];
+        return Terrain[this.#garden.terrains[lat * this.#garden.longitude + lng]];
     }
 
     #getPosition(latitude, longitude) {
