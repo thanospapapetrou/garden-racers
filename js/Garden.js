@@ -17,16 +17,14 @@ class Garden {
             }
         },
         latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, latLng),
-        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
-        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
+        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
+        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
     };
 
     #garden;
-    #terrain;
     #positionLattice;
     #normalLattice;
     #textureLattice;
-    #foo;
     #task;
 
     // TODO terrain blending
@@ -36,13 +34,15 @@ class Garden {
     constructor(gl, url) {
         return (async () => {
             this.#garden = await(await GardenRacers.load(url)).json();
-            this.#terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
             this.#textureLattice = this.#calculateTextureLattice();
-            this.#foo = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
-            this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
-                    Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
+            const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
+                    Garden.#ATTRIBUTES);
+            renderer.latLng = [this.#garden.latitude, this.#garden.longitude];
+            renderer.textureCoordinates = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
+            renderer.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
+            this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals)
                     }, new IndexData(gl, this.#indices));
@@ -51,8 +51,7 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, light, terrain: this.#terrain,
-                textureCoordinates: this.#foo, latLng: [this.#garden.latitude, this.#garden.longitude]}); // TODO do not set all here
+        this.#task.render({projection, camera, model, light}); // TODO do not set all here
     }
 
     get #positions() {
