@@ -28,7 +28,6 @@ class Garden {
     #task;
 
     // TODO terrain blending
-    // TODO attribute max type is mat3 (mat4 actually)
     // TODO refactor to exact common superclass from Texture and DataTexture
 
     constructor(gl, url) {
