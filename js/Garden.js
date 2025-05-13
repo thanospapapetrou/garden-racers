@@ -30,6 +30,7 @@ class Garden {
 
     // TODO terrain blending
     // TODO attribute max type is mat3 (mat4 actually)
+    // TODO refactor to exact common superclass from Texture and DataTexture
 
     constructor(gl, url) {
         return (async () => {
@@ -104,6 +105,8 @@ class Garden {
 
     get #textureCoordinates() {
         const coordinates = [];
+        // TODO take into account terrain
+        // TODO make s and t index half pixels
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 coordinates.push(this.#textureLattice[null][null].x,
@@ -193,13 +196,13 @@ class Garden {
         lattice[null] = [];
         lattice[null][null] = this.#calculateTextureCoordinates(null, null);
         for (let dir of Object.keys(Direction)) {
-            lattice[null][dir] = this.#calculateTextureCoordinates(null, dir);
+            lattice[null][dir] = this.#calculateTextureCoordinates(null, Direction[dir]);
         }
         for (let direction of Object.keys(Direction)) {
             lattice[direction] = [];
-            lattice[direction][null] = this.#calculateTextureCoordinates(direction, null);
+            lattice[direction][null] = this.#calculateTextureCoordinates(Direction[direction], null);
             for (let dir of Object.keys(Direction)) {
-                lattice[direction][dir] = this.#calculateTextureCoordinates(direction, dir);
+                lattice[direction][dir] = this.#calculateTextureCoordinates(Direction[direction], Direction[dir]);
             }
         }
         return lattice;
@@ -235,8 +238,9 @@ class Garden {
     }
 
     #calculateTextureCoordinates(direction, dir) {
-        let s = 0.25 * (Direction[direction]?.lng ?? 0.0) - 0.5 * (Direction[dir]?.lng ?? 0.0) + 0.5;
-        let t = -0.25 * (Direction[direction]?.lat ?? 0.0) + 0.5 * (Direction[dir]?.lng ?? 0.0) + 0.5;
-        return new Vector(s, t, Math.max(1.0 - Math.sqrt(Math.pow(0.5 - s, 2.0) + Math.pow(0.5 - t, 2.0)), 0.0));
+        let s = 0.25 * (direction?.lng ?? 0.0) - 0.5 * (dir?.lng ?? 0.0) + 0.5;
+        let t = -0.25 * (direction?.lat ?? 0.0) + 0.5 * (dir?.lat ?? 0.0) + 0.5;
+        return new Vector(s, t,
+                Math.max(Math.sqrt(2.0) / 2.0 - Math.sqrt(Math.pow(0.5 - s, 2.0) + Math.pow(0.5 - t, 2.0)), 0.0));
     }
 }
