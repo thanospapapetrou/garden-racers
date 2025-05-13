@@ -17,6 +17,7 @@
 uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 model;
+uniform sampler2D textureCoordinates;
 
 in vec3 position;
 in vec3 normal;
@@ -53,19 +54,15 @@ int getTerrain(const in ivec2 latitudeLongitude) { // TODO use map texture
     return (lat * LONGITUDE + lng) % TERRAINS;
 }
 
-vec3 getTextureCoordinates(const in int terrain, const in float s, const in float t, const in float p) { // TODO replace last 3 floats with vec3
-    return vec3((float(terrain) + s) / float(TERRAINS), t, p);
-}
-
 vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec2 latitudeLongitude, const in int direction) {
     vec3[DIRECTIONS] coordinates;
-    int components = 0; // TODO improve
+    // TODO remove
     for (int dir = 0; dir < DIRECTIONS; dir++) {
         int terrain = getTerrain(latitudeLongitude + getDirection(dir));
-        float s = 0.25 * float(getDirection(direction).y) - 0.5 * float(getDirection(dir).y) + 0.5;
-        float t = -0.25 * float(getDirection(direction).x) + 0.5 * float(getDirection(dir).x) + 0.5;
-        float p = max(1.0 - sqrt(pow(0.5 - s, 2.0) + pow(0.5 - t, 2.0)), 0.0);
-        coordinates[dir] = getTextureCoordinates(terrain, s, t, p);
+        // float s = 0.25 * float(getDirection(direction).y) - 0.5 * float(getDirection(dir).y) + 0.5;
+        coordinates[dir] = texture(textureCoordinates, vec2(float(latitudeLongitude.x * LONGITUDE * DIRECTIONS * DIRECTIONS
+                + latitudeLongitude.y * DIRECTIONS * DIRECTIONS + direction * DIRECTIONS + dir) + 0.5
+                / float(LATITUDE) / float(LONGITUDE) / float(DIRECTIONS) / float(DIRECTIONS), 0.5)).stp;
     }
     return coordinates;
 }

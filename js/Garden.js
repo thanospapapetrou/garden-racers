@@ -10,6 +10,7 @@ class Garden {
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
         terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
+        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
@@ -23,6 +24,8 @@ class Garden {
     #terrain;
     #positionLattice;
     #normalLattice;
+    #textureLattice;
+    #foo;
     #task;
 
     // TODO terrain blending
@@ -34,6 +37,8 @@ class Garden {
             this.#terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
+            this.#textureLattice = this.#calculateTextureLattice();
+            this.#foo = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
             this.#task = new RenderingTask(gl, await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT,
                     Garden.#UNIFORMS, Garden.#ATTRIBUTES), {
                         position: new AttributeData(gl, this.#positions),
@@ -44,7 +49,8 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, terrain: this.#terrain, light});
+        this.#task.render({projection, camera, model, terrain: this.#terrain,
+                textureCoordinates: this.#foo, light}); // TODO do not set all here
     }
 
     get #positions() {
@@ -94,6 +100,33 @@ class Garden {
             }
         }
         return indices;
+    }
+
+    get #textureCoordinates() {
+        const coordinates = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                coordinates.push(this.#textureLattice[null][null].x,
+                        this.#textureLattice[null][null].y,
+                        this.#textureLattice[null][null].z);
+                        for (let dir of Object.keys(Direction)) {
+                            coordinates.push(this.#textureLattice[null][dir].x,
+                                    this.#textureLattice[null][dir].y,
+                                    this.#textureLattice[null][dir].z);
+                        }
+                for (let direction of Object.keys(Direction)) {
+                    coordinates.push(this.#textureLattice[direction][null].x,
+                            this.#textureLattice[direction][null].y,
+                            this.#textureLattice[direction][null].z);
+                    for (let dir of Object.keys(Direction)) {
+                        coordinates.push(this.#textureLattice[direction][dir].x,
+                                this.#textureLattice[direction][dir].y,
+                                this.#textureLattice[direction][dir].z);
+                    }
+                }
+            }
+        }
+        return coordinates;
     }
 
     #calculatePositionLattice() {
@@ -155,6 +188,23 @@ class Garden {
         return lattice;
     }
 
+    #calculateTextureLattice() {
+        const lattice = [];
+        lattice[null] = [];
+        lattice[null][null] = this.#calculateTextureCoordinates(null, null);
+        for (let dir of Object.keys(Direction)) {
+            lattice[null][dir] = this.#calculateTextureCoordinates(null, dir);
+        }
+        for (let direction of Object.keys(Direction)) {
+            lattice[direction] = [];
+            lattice[direction][null] = this.#calculateTextureCoordinates(direction, null);
+            for (let dir of Object.keys(Direction)) {
+                lattice[direction][dir] = this.#calculateTextureCoordinates(direction, dir);
+            }
+        }
+        return lattice;
+    }
+
     #getAltitude(latitude, longitude) {
         const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const lng = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
@@ -182,5 +232,11 @@ class Garden {
 
     #calculateNormal(a, b, c) {
         return b.subtract(a).cross(c.subtract(b)).normalize();
+    }
+
+    #calculateTextureCoordinates(direction, dir) {
+        let s = 0.25 * (Direction[direction]?.lng ?? 0.0) - 0.5 * (Direction[dir]?.lng ?? 0.0) + 0.5;
+        let t = -0.25 * (Direction[direction]?.lat ?? 0.0) + 0.5 * (Direction[dir]?.lng ?? 0.0) + 0.5;
+        return new Vector(s, t, Math.max(1.0 - Math.sqrt(Math.pow(0.5 - s, 2.0) + Math.pow(0.5 - t, 2.0)), 0.0));
     }
 }

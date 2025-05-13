@@ -25,8 +25,8 @@ out vec4 fragmentColor;
 void main(void) {
     fragmentColor = vec4(0.0, 0.0, 0.0, 1.0);
     float weight = 0.0f;
-    for (int i = 0; i < DIRECTIONS; i++) {
-        fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
+    for (int i = 0; i < 1; i++) {
+        fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p; // TODO take half pixels
         weight += vertexTextureCoordinates[i].p;
     }
     if (weight > 0.0) {
