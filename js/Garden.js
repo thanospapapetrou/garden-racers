@@ -9,15 +9,16 @@ class Garden {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
-        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
                 color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
                 direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
             }
-        }
+        },
+        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, latLng),
+        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
+        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
     };
 
     #garden;
@@ -50,8 +51,8 @@ class Garden {
     }
 
     render(projection, camera, model, light) {
-        this.#task.render({projection, camera, model, terrain: this.#terrain,
-                textureCoordinates: this.#foo, light}); // TODO do not set all here
+        this.#task.render({projection, camera, model, light, terrain: this.#terrain,
+                textureCoordinates: this.#foo, latLng: [this.#garden.latitude, this.#garden.longitude]}); // TODO do not set all here
     }
 
     get #positions() {

@@ -19,6 +19,7 @@ uniform sampler2D terrain;
 
 in vec3 vertexNormal;
 in vec3[DIRECTIONS] vertexTextureCoordinates;
+in float test;
 
 out vec4 fragmentColor;
 
@@ -27,6 +28,7 @@ void main(void) {
     for (int i = 0; i < 1; i++) {
         fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
     }
+    fragmentColor.rgb = vec3(test, 0.0, 0.0);
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);
 }
