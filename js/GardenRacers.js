@@ -17,7 +17,7 @@ class GardenRacers {
         ambient: [0.25, 0.25, 0.25], // 25% white
         directional: {
             color: [0.75, 0.75, 0.75], // 75% white
-            direction: [-1.0, -1.0, -1.0] //  TODO should this be negative and describe
+            direction: [-1.0, -1.0, -1.0] // from top right back
         }
     };
     static #MS_PER_S = 1000; // 1 s = 1000 ms
