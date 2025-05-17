@@ -38,9 +38,9 @@ class Garden {
             this.#textureLattice = this.#calculateTextureLattice();
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            renderer.latLng = [this.#garden.latitude, this.#garden.longitude];
-            renderer.textureCoordinates = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
-            renderer.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
+            renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
+            renderer.uniforms.textureCoordinates = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
+            renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals)
@@ -143,7 +143,7 @@ class Garden {
             for (let longitude = 0; longitude < 2 * this.#garden.longitude + 1; longitude++) {
                 const lat = Math.floor((latitude - 1) / 2);
                 const lng = Math.floor((longitude - 1) / 2);
-                let altitude = 0.0;
+                let altitude = 0.0; // TODO use directions
                 if ((latitude % 2 == 1) && (longitude % 2 == 1)) { // between parallels and between meridians; altitude
                     altitude = this.#getAltitude(lat, lng);
                 } else if (latitude % 2 == 1) { // between parallels and on meridian; average east and west
@@ -158,7 +158,7 @@ class Garden {
                             + this.#getAltitude(lat, lng)
                             + this.#getAltitude(lat + 1, lng)) / 4.0;
                 }
-                lattice[latitude][longitude] = new Vector(0.5 * longitude, 0.5 * latitude, altitude);
+                lattice[latitude][longitude] = new Vector(0.5 * longitude, 0.5 * latitude, altitude); // TODO lattice step
             }
         }
         return lattice;
@@ -176,7 +176,7 @@ class Garden {
                             longitude + Direction[direction].lng);
                 }
                 let normal = new Vector(0.0, 0.0, 0.0);
-                if ((latitude % 2 == 1) ^ (longitude % 2 == 1)) {
+                if ((latitude % 2 == 1) ^ (longitude % 2 == 1)) { // TODO use step
                     for (let direction = 0; direction < Object.keys(Direction).length; direction += 2) {
                         const dir = Object.keys(Direction)[direction];
                         const next = Object.keys(Direction)[(direction + 2) % Object.keys(Direction).length];
@@ -227,7 +227,7 @@ class Garden {
     #getPosition(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const lng = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
-        return new Vector(0.5 * longitude, 0.5 * latitude,
+        return new Vector(0.5 * longitude, 0.5 * latitude, // TODO lattice step
             this.#positionLattice[lat][lng].z);
     }
 
