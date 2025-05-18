@@ -18,6 +18,7 @@ uniform mat4 projection;
 uniform mat4 camera;
 uniform mat4 model;
 uniform ivec2 latLng;
+uniform highp isampler2D terrains;
 
 in vec3 position;
 in vec3 normal;
@@ -52,7 +53,9 @@ vec2 getDirection(const in int direction) { // TODO use static array
 vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec3 latLngDir) {
     vec3[DIRECTIONS] coordinates;
     for (int dir = 0; dir < DIRECTIONS; dir++) {
-        coordinates[dir].st = CENTER + getDirection(latLngDir.z) * LATTICE_STEP;
+        int terrain = texelFetch(terrains, ivec2(latLngDir.x * latLng.y + latLngDir.y, 0), 0).r;
+        coordinates[dir].st = vec2(float(terrain), 0.0);
+        coordinates[dir].st += CENTER + getDirection(latLngDir.z) * LATTICE_STEP;
         coordinates[dir].s /= float(TERRAINS);
         coordinates[dir].p = 1.0;
     }
@@ -66,5 +69,5 @@ void main(void) {
     int longitude = gl_VertexID / DIRECTIONS % latLng.y;
     int direction = gl_VertexID % DIRECTIONS;
     vertexTextureCoordinates = calculateTextureCoordinates(ivec3(latitude, longitude, direction));
-    test = float(latitude) / 4.0;
+    test = float(texelFetch(terrains, ivec2(latitude * latLng.y + longitude, 0), 0).r) / 4.0;
 }

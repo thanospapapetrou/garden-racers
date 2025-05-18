@@ -12,9 +12,7 @@ class DataTexture {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB32F, data.length / Vector.COMPONENTS, 1, 0, gl.RGB, gl.FLOAT,
-                new Float32Array(data));
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32I, data.length, 1, 0, gl.RED_INTEGER, gl.INT, new Int32Array(data));
     }
 
     get unit() {

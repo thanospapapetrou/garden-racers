@@ -17,7 +17,8 @@ class Garden {
             }
         },
         latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, new Int32Array(latLng)),
-        terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
+        terrain: (gl, uniform, terrain) => gl.uniform1i(uniform, terrain.unit - gl.TEXTURE0),
+        terrains: (gl, uniform, terrains) => gl.uniform1i(uniform, terrains.unit - gl.TEXTURE0)
     };
 
     #garden;
@@ -37,6 +38,7 @@ class Garden {
                     Garden.#ATTRIBUTES);
             renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
             renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
+            renderer.uniforms.terrains = new DataTexture(gl, gl.TEXTURE1, this.#terrains);
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals)
@@ -96,6 +98,16 @@ class Garden {
             }
         }
         return indices;
+    }
+
+    get #terrains() {
+        const terrains = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                terrains.push(this.#getTerrain(latitude, longitude));
+            }
+        }
+        return terrains;
     }
 
     #calculatePositionLattice() {
