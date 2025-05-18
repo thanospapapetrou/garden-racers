@@ -16,7 +16,7 @@ class Garden {
                 direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
             }
         },
-        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, new Int32Array([latLng.lng, latLng.lat])),
+        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, new Int32Array(latLng)),
         terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
     };
 
@@ -35,7 +35,7 @@ class Garden {
             this.#normalLattice = this.#calculateNormalLattice();
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            renderer.uniforms.latLng = {lat: this.#garden.latitude, lng: this.#garden.longitude};
+            renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
             renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),

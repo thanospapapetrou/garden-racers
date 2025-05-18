@@ -62,9 +62,9 @@ vec3[DIRECTIONS] calculateTextureCoordinates(const in ivec3 latLngDir) {
 void main(void) {
     gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
     vertexNormal = mat3(transpose(inverse(model))) * normal;
-    int latitude = gl_VertexID / DIRECTIONS / latLng.x;
-    int longitude = gl_VertexID / DIRECTIONS % latLng.x;
+    int latitude = gl_VertexID / DIRECTIONS / latLng.y;
+    int longitude = gl_VertexID / DIRECTIONS % latLng.y;
     int direction = gl_VertexID % DIRECTIONS;
     vertexTextureCoordinates = calculateTextureCoordinates(ivec3(latitude, longitude, direction));
-    test = float(latitude) / 5.0;
+    test = float(latitude) / 4.0;
 }
