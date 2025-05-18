@@ -61,12 +61,14 @@ class Renderer {
     #resolveUniforms(prefix, uniforms) {
         const result = {};
         const gl = this.#gl;
+        const program = this.#program;
         for (let uniform of Object.keys(uniforms)) {
             const setter = uniforms[uniform];
             if (typeof setter == Renderer.#TYPE_FUNCTION) {
                 const location = this.#gl.getUniformLocation(this.#program, prefix + uniform);
                 Object.defineProperty(result, uniform, {
                     set(value) {
+                        gl.useProgram(program);
                         setter(gl, location, value);
                     }
                 });

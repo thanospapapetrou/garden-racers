@@ -9,22 +9,20 @@ class Garden {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        light: {
+        light: { // TODO verify that no arrays are required
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
                 color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
                 direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
             }
         },
-        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, latLng),
-        textureCoordinates: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0),
+        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, new Int32Array([latLng.lng, latLng.lat])),
         terrain: (gl, uniform, texture) => gl.uniform1i(uniform, texture.unit - gl.TEXTURE0)
     };
 
     #garden;
     #positionLattice;
     #normalLattice;
-    #textureLattice;
     #task;
 
     // TODO terrain blending
@@ -35,11 +33,9 @@ class Garden {
             this.#garden = await(await GardenRacers.load(url)).json();
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
-            this.#textureLattice = this.#calculateTextureLattice();
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
-            renderer.uniforms.textureCoordinates = new DataTexture(gl, gl.TEXTURE1, this.#textureCoordinates);
+            renderer.uniforms.latLng = {lat: this.#garden.latitude, lng: this.#garden.longitude};
             renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
@@ -102,40 +98,6 @@ class Garden {
         return indices;
     }
 
-    get #textureCoordinates() {
-        const coordinates = [];
-        // TODO take into account terrain
-        // TODO make s and t index half pixels
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                const terrain = this.#getTerrain(latitude, longitude);
-                coordinates.push(((this.#textureLattice[null][null].x + terrain.s) * 4 + 0.5) / 8,
-                        ((this.#textureLattice[null][null].y + terrain.t) * 4 + 0.5) / 8,
-                        1.0);
-//                        this.#textureLattice[null][null].z); // TODO
-                for (let dir of Object.keys(Direction)) {
-                    coordinates.push(((this.#textureLattice[null][dir].x + terrain.s) * 4 + 0.5) / 8,
-                            ((this.#textureLattice[null][dir].y + terrain.t) * 4 + 0.5) / 8,
-                            1.0);
-                            //this.#textureLattice[null][dir].z); TODO
-                }
-                for (let direction of Object.keys(Direction)) {
-                    coordinates.push(((this.#textureLattice[direction][null].x + terrain.s) * 4 + 0.5) / 8,
-                            ((this.#textureLattice[direction][null].y + terrain.t) * 4 + 0.5) / 8,
-                            1.0);
-                            // this.#textureLattice[direction][null].z); TODO
-                    for (let dir of Object.keys(Direction)) {
-                        coordinates.push(((this.#textureLattice[direction][dir].x + terrain.s) * 4 + 0.5) / 8,
-                                ((this.#textureLattice[direction][dir].y + terrain.t) * 4 + 0.5) / 8,
-                                1.0);
-                                // this.#textureLattice[direction][dir].z); TODO
-                    }
-                }
-            }
-        }
-        return coordinates;
-    }
-
     #calculatePositionLattice() {
         const lattice = [];
         for (let latitude = 0; latitude < 2 * this.#garden.latitude + 1; latitude++) {
@@ -195,23 +157,6 @@ class Garden {
         return lattice;
     }
 
-    #calculateTextureLattice() {
-        const lattice = [];
-        lattice[null] = [];
-        lattice[null][null] = this.#calculateTextureCoordinates(null, null);
-        for (let dir of Object.keys(Direction)) {
-            lattice[null][dir] = this.#calculateTextureCoordinates(null, Direction[dir]);
-        }
-        for (let direction of Object.keys(Direction)) {
-            lattice[direction] = [];
-            lattice[direction][null] = this.#calculateTextureCoordinates(Direction[direction], null);
-            for (let dir of Object.keys(Direction)) {
-                lattice[direction][dir] = this.#calculateTextureCoordinates(Direction[direction], Direction[dir]);
-            }
-        }
-        return lattice;
-    }
-
     #getAltitude(latitude, longitude) {
         const lat = this.#garden.latitude - Math.min(Math.max(latitude, 0), this.#garden.latitude - 1) - 1;
         const lng = Math.min(Math.max(longitude, 0), this.#garden.longitude - 1);
@@ -239,12 +184,5 @@ class Garden {
 
     #calculateNormal(a, b, c) {
         return b.subtract(a).cross(c.subtract(b)).normalize();
-    }
-
-    #calculateTextureCoordinates(direction, dir) {
-        let s = 0.25 * (direction?.lng ?? 0.0) - 0.5 * (dir?.lng ?? 0.0) + 0.5;
-        let t = -0.25 * (direction?.lat ?? 0.0) + 0.5 * (dir?.lat ?? 0.0) + 0.5;
-        return new Vector(s, t,
-                Math.max(Math.sqrt(2.0) / 2.0 - Math.sqrt(Math.pow(0.5 - s, 2.0) + Math.pow(0.5 - t, 2.0)), 0.0));
     }
 }
