@@ -26,7 +26,7 @@ class Garden {
     #normalLattice;
     #task;
 
-    // TODO terrain blending
+    // TODO include nulls for center in loops
     // TODO refactor to exact common superclass from Texture and DataTexture
 
     constructor(gl, url) {
@@ -147,19 +147,12 @@ class Garden {
                     positions[direction] = this.#getPosition(latitude + Direction[direction].lat,
                             longitude + Direction[direction].lng);
                 }
+                const step = ((latitude % 2 == 1) ^ (longitude % 2 == 1)) ? 2 : 1;
                 let normal = new Vector(0.0, 0.0, 0.0);
-                if ((latitude % 2 == 1) ^ (longitude % 2 == 1)) { // TODO use step
-                    for (let direction = 0; direction < Object.keys(Direction).length; direction += 2) {
-                        const dir = Object.keys(Direction)[direction];
-                        const next = Object.keys(Direction)[(direction + 2) % Object.keys(Direction).length];
-                        normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
-                    }
-                } else {
-                    for (let direction = 0; direction < Object.keys(Direction).length; direction++) {
-                        const dir = Object.keys(Direction)[direction];
-                        const next = Object.keys(Direction)[(direction + 1) % Object.keys(Direction).length];
-                        normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
-                    }
+                for (let direction = 0; direction < Object.keys(Direction).length; direction += step) {
+                    const dir = Object.keys(Direction)[direction];
+                    const next = Object.keys(Direction)[(direction + step) % Object.keys(Direction).length];
+                    normal = normal.add(this.#calculateNormal(positions[dir], positions[null], positions[next]));
                 }
                 lattice[latitude][longitude] = normal.normalize();
             }
@@ -172,11 +165,9 @@ class Garden {
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 for (let dir of [null, ...Object.values(Direction)]) {
-                    let lat = latitude + (direction?.lat ?? 0);
-                    let lng = longitude + (direction?.lng ?? 0);
-                    let terrain = this.#getTerrain(lat, lng);
-                    let s = (terrain + 0.5 + ((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0)) * 0.25) / Object.keys(Terrain).length;
-                    let t = 0.5 - ((dir?.lat ?? 0) + 2 * (direction?.lat ?? 0)) * 0.25;
+                    let s = (this.#getTerrain(latitude + (direction?.lat ?? 0), longitude + (direction?.lng ?? 0))
+                            + 0.5 + ((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0)) * 0.25) / Object.keys(Terrain).length;
+                    let t = 0.5 - ((dir?.lat ?? 0) + 2 * (direction?.lat ?? 0)) * 0.25; // TODO step
                     let p = Math.max(2 - Math.sqrt(Math.pow((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0), 2) +
                             Math.pow((dir?.lat ?? 0) - 2 * (direction?.lat ?? 0), 2)), 0.0);
                     coordinates.push(s, t, p);
