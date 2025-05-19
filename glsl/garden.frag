@@ -30,9 +30,7 @@ void main(void) {
         fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
         p += vertexTextureCoordinates[i].p;
     }
-    for (int i = 0; i < DIRECTIONS; i++) { // TODO
-        fragmentColor.rgb /= p;
-    }
+    fragmentColor.rgb /= p;
     //fragmentColor.rgb = vec3(p > 0.0, 1.0, 0.0);// TODO
     fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
             normalize(-light.directional.direction)), 0.0);

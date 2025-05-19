@@ -1,7 +1,9 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = ['position', 'normal'];
+    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
+            'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
+            'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
     static #IMAGE_TERRAIN = './img/terrain.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
@@ -41,7 +43,17 @@ class Garden {
             renderer.uniforms.terrains = new DataTexture(gl, gl.TEXTURE1, this.#terrains);
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
-                        normal: new AttributeData(gl, this.#normals)
+                        normal: new AttributeData(gl, this.#normals),
+                        textureCoordinatesCenter: new AttributeData(gl, this.#getTextureCoordinates(null)),
+                        textureCoordinatesN: new AttributeData(gl, this.#getTextureCoordinates(Direction.N)),
+                        textureCoordinatesNE: new AttributeData(gl, this.#getTextureCoordinates(Direction.NE)),
+                        textureCoordinatesE: new AttributeData(gl, this.#getTextureCoordinates(Direction.E)),
+                        textureCoordinatesSE: new AttributeData(gl, this.#getTextureCoordinates(Direction.SE)),
+                        textureCoordinatesS: new AttributeData(gl, this.#getTextureCoordinates(Direction.S)),
+                        textureCoordinatesSW: new AttributeData(gl, this.#getTextureCoordinates(Direction.SW)),
+                        textureCoordinatesW: new AttributeData(gl, this.#getTextureCoordinates(Direction.W)),
+                        textureCoordinatesNW: new AttributeData(gl, this.#getTextureCoordinates(Direction.NW))
+
                     }, new IndexData(gl, this.#indices));
             return this;
         })();
@@ -167,6 +179,33 @@ class Garden {
             }
         }
         return lattice;
+    }
+
+    #getTextureCoordinates(direction) { // TODO cleanup
+        const coordinates = [];
+        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
+            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
+                for (let dir of [null, ...Object.values(Direction)]) {
+                    let lat = latitude + (direction?.lat ?? 0);
+                    let lng = longitude + (direction?.lng ?? 0);
+                    let terrain = this.#getTerrain(lat, lng);
+                    let s = (terrain + 0.5 + (dir?.lng ?? 0) * 0.25 - (direction?.lng ?? 0) * 2 * 0.25) / Object.keys(Terrain).length;
+                    let t = 0.5 - (dir?.lat ?? 0) * 0.25 + (direction?.lat ?? 0) * 2 * 0.25;
+                    let p = ((0.0 < s) && (s < 1.0) && (0.0 < t) && (t < 1.0)) ? 1.0 : 0.0; // TODO cleanup and calculate p according to distance
+//                  coordinates[dir].p = max(length(vec2(1.0, 1.0) * 2.0 * LATTICE_STEP) - length(vec2(DIRECTIONS[latLngDir.z]) - 4.0 * vec2(DIRECTIONS[dir])) * LATTICE_STEP, 0.0);
+                    coordinates.push(s, t, p);
+                }
+            }
+        }
+        return coordinates;
+//        for (int dir = 0; dir < DIRECTIONS.length(); dir++) {
+//                  ivec2 ll = latLngDir.xy + DIRECTIONS[dir]; // TODO rename
+//                  int terrain = texelFetch(terrains, ivec2(ll.x * latLng.y + ll.y, 0), 0).r;
+//                  coordinates[dir].st = CENTER + vec2(DIRECTIONS[latLngDir.z]) * LATTICE_STEP
+//                          - vec2(DIRECTIONS[dir]) * 2.0 * LATTICE_STEP;
+//                  coordinates[dir].st += vec2(float(terrain), 0.0);
+//                  coordinates[dir].s /= float(TERRAINS);
+//              }
     }
 
     #getAltitude(latitude, longitude) {
