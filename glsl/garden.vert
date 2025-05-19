@@ -22,9 +22,7 @@ out vec3[9] vertexTextureCoordinates;
 void main(void) {
     gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
     vertexNormal = mat3(transpose(inverse(model))) * normal;
-    for (int i = 0; i < vertexTextureCoordinates.length(); i++) {
-        vertexTextureCoordinates[i] = vec3[](textureCoordinatesCenter, textureCoordinatesN, textureCoordinatesNE,
-                textureCoordinatesE, textureCoordinatesSE, textureCoordinatesS, textureCoordinatesSW,
-                textureCoordinatesW, textureCoordinatesNW)[i];
-    }
+    vertexTextureCoordinates = vec3[](textureCoordinatesCenter, textureCoordinatesN, textureCoordinatesNE,
+            textureCoordinatesE, textureCoordinatesSE, textureCoordinatesS,
+            textureCoordinatesSW, textureCoordinatesW, textureCoordinatesNW);
 }

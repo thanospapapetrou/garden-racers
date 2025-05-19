@@ -18,9 +18,7 @@ class Garden {
                 direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
             }
         },
-        latLng: (gl, uniform, latLng) => gl.uniform2iv(uniform, new Int32Array(latLng)),
-        terrain: (gl, uniform, terrain) => gl.uniform1i(uniform, terrain.unit - gl.TEXTURE0),
-        terrains: (gl, uniform, terrains) => gl.uniform1i(uniform, terrains.unit - gl.TEXTURE0)
+        terrain: (gl, uniform, terrain) => gl.uniform1i(uniform, terrain.unit - gl.TEXTURE0)
     };
 
     #garden;
@@ -38,9 +36,7 @@ class Garden {
             this.#normalLattice = this.#calculateNormalLattice();
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
             renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
-            renderer.uniforms.terrains = new DataTexture(gl, gl.TEXTURE1, this.#terrains); // TODO remove
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals),
@@ -110,16 +106,6 @@ class Garden {
             }
         }
         return indices;
-    }
-
-    get #terrains() {
-        const terrains = [];
-        for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
-            for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
-                terrains.push(this.#getTerrain(latitude, longitude));
-            }
-        }
-        return terrains;
     }
 
     #calculatePositionLattice() {
@@ -198,14 +184,6 @@ class Garden {
             }
         }
         return coordinates;
-//        for (int dir = 0; dir < DIRECTIONS.length(); dir++) {
-//                  ivec2 ll = latLngDir.xy + DIRECTIONS[dir]; // TODO rename
-//                  int terrain = texelFetch(terrains, ivec2(ll.x * latLng.y + ll.y, 0), 0).r;
-//                  coordinates[dir].st = CENTER + vec2(DIRECTIONS[latLngDir.z]) * LATTICE_STEP
-//                          - vec2(DIRECTIONS[dir]) * 2.0 * LATTICE_STEP;
-//                  coordinates[dir].st += vec2(float(terrain), 0.0);
-//                  coordinates[dir].s /= float(TERRAINS);
-//              }
     }
 
     #getAltitude(latitude, longitude) {
