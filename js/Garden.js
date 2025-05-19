@@ -175,10 +175,10 @@ class Garden {
                     let lat = latitude + (direction?.lat ?? 0);
                     let lng = longitude + (direction?.lng ?? 0);
                     let terrain = this.#getTerrain(lat, lng);
-                    let s = (terrain + 0.5 + (dir?.lng ?? 0) * 0.25 - (direction?.lng ?? 0) * 2 * 0.25) / Object.keys(Terrain).length;
-                    let t = 0.5 - (dir?.lat ?? 0) * 0.25 + (direction?.lat ?? 0) * 2 * 0.25;
-                    let p = ((0.0 < s) && (s < 1.0) && (0.0 < t) && (t < 1.0)) ? 1.0 : 0.0; // TODO cleanup and calculate p according to distance
-//                  coordinates[dir].p = max(length(vec2(1.0, 1.0) * 2.0 * LATTICE_STEP) - length(vec2(DIRECTIONS[latLngDir.z]) - 4.0 * vec2(DIRECTIONS[dir])) * LATTICE_STEP, 0.0);
+                    let s = (terrain + 0.5 + ((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0)) * 0.25) / Object.keys(Terrain).length;
+                    let t = 0.5 - ((dir?.lat ?? 0) + 2 * (direction?.lat ?? 0)) * 0.25;
+                    let p = Math.max(2 - Math.sqrt(Math.pow((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0), 2) +
+                            Math.pow((dir?.lat ?? 0) - 2 * (direction?.lat ?? 0), 2)), 0.0);
                     coordinates.push(s, t, p);
                 }
             }
