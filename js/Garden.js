@@ -4,7 +4,7 @@ class Garden {
     static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
             'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
             'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
-    static #IMAGE_TERRAIN = './img/terrain.png';
+    static #IMAGE_TERRAIN = './img/terrain.png'; // TODO plural
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #UNIFORMS = {
@@ -39,8 +39,8 @@ class Garden {
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
             renderer.uniforms.latLng = [this.#garden.latitude, this.#garden.longitude];
-            renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN)
-            renderer.uniforms.terrains = new DataTexture(gl, gl.TEXTURE1, this.#terrains);
+            renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
+            renderer.uniforms.terrains = new DataTexture(gl, gl.TEXTURE1, this.#terrains); // TODO remove
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals),
