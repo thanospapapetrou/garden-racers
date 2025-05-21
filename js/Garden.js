@@ -7,6 +7,8 @@ class Garden {
     static #IMAGE_TERRAIN = './img/terrain.png'; // TODO plural
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
+    static #STEP_LATTICE = 0.5;
+    static #STEP_TEXTURE = 0.25;
     static #UNIFORMS = {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
@@ -130,7 +132,8 @@ class Garden {
                             + this.#getAltitude(lat, lng)
                             + this.#getAltitude(lat + 1, lng)) / 4.0;
                 }
-                lattice[latitude][longitude] = new Vector(0.5 * longitude, 0.5 * latitude, altitude); // TODO lattice step
+                lattice[latitude][longitude] = new Vector(Garden.#STEP_LATTICE * longitude,
+                        Garden.#STEP_LATTICE * latitude, altitude);
             }
         }
         return lattice;
@@ -160,14 +163,15 @@ class Garden {
         return lattice;
     }
 
-    #getTextureCoordinates(direction) { // TODO cleanup
+    #getTextureCoordinates(direction) {
         const coordinates = [];
         for (let latitude = 0; latitude < this.#garden.latitude; latitude++) {
             for (let longitude = 0; longitude < this.#garden.longitude; longitude++) {
                 for (let dir of [null, ...Object.values(Direction)]) {
                     let s = (this.#getTerrain(latitude + (direction?.lat ?? 0), longitude + (direction?.lng ?? 0))
-                            + 0.5 + ((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0)) * 0.25) / Object.keys(Terrain).length;
-                    let t = 0.5 - ((dir?.lat ?? 0) + 2 * (direction?.lat ?? 0)) * 0.25; // TODO step
+                            + Garden.#STEP_LATTICE + ((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0))
+                            * Garden.#STEP_TEXTURE) / Object.keys(Terrain).length;
+                    let t = Garden.#STEP_LATTICE - ((dir?.lat ?? 0) + 2 * (direction?.lat ?? 0)) * Garden.#STEP_TEXTURE;
                     let p = Math.max(2 - Math.sqrt(Math.pow((dir?.lng ?? 0) - 2 * (direction?.lng ?? 0), 2) +
                             Math.pow((dir?.lat ?? 0) - 2 * (direction?.lat ?? 0), 2)), 0.0);
                     coordinates.push(s, t, p);
@@ -192,8 +196,8 @@ class Garden {
     #getPosition(latitude, longitude) {
         const lat = Math.min(Math.max(latitude, 0), 2 * this.#garden.latitude);
         const lng = Math.min(Math.max(longitude, 0), 2 * this.#garden.longitude);
-        return new Vector(0.5 * longitude, 0.5 * latitude, // TODO lattice step
-            this.#positionLattice[lat][lng].z);
+        return new Vector(Garden.#STEP_LATTICE * longitude, Garden.#STEP_LATTICE * latitude,
+                this.#positionLattice[lat][lng].z);
     }
 
     #getNormal(latitude, longitude) {
