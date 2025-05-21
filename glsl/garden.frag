@@ -13,7 +13,7 @@ struct Light {
 };
 
 uniform Light light;
-uniform sampler2D terrain;
+uniform sampler2D terrains;
 
 in vec3 vertexNormal;
 in vec3[9] vertexTextureCoordinates;
@@ -24,7 +24,7 @@ void main(void) {
     fragmentColor = vec4(0.0, 0.0, 0.0, 1.0);
     float p = 0.0;
     for (int i = 0; i < vertexTextureCoordinates.length(); i++) {
-        fragmentColor.rgb += texture(terrain, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
+        fragmentColor.rgb += texture(terrains, vertexTextureCoordinates[i].st).rgb * vertexTextureCoordinates[i].p;
         p += vertexTextureCoordinates[i].p;
     }
     fragmentColor.rgb /= p;

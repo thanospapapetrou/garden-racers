@@ -4,7 +4,7 @@ class Garden {
     static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
             'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
             'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
-    static #IMAGE_TERRAIN = './img/terrain.png'; // TODO plural
+    static #IMAGE_TERRAINS = './img/terrains.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #STEP_LATTICE = 0.5;
@@ -13,14 +13,14 @@ class Garden {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
         camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        light: { // TODO verify that no arrays are required
+        light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
             directional: {
                 color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
                 direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
             }
         },
-        terrain: (gl, uniform, terrain) => gl.uniform1i(uniform, terrain.unit - gl.TEXTURE0)
+        terrains: (gl, uniform, terrains) => gl.uniform1i(uniform, terrains.unit - gl.TEXTURE0)
     };
 
     #garden;
@@ -29,7 +29,6 @@ class Garden {
     #task;
 
     // TODO include nulls for center in loops
-    // TODO refactor to exact common superclass from Texture and DataTexture
 
     constructor(gl, url) {
         return (async () => {
@@ -38,7 +37,7 @@ class Garden {
             this.#normalLattice = this.#calculateNormalLattice();
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            renderer.uniforms.terrain = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAIN);
+            renderer.uniforms.terrains = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAINS);
             this.#task = new RenderingTask(gl, renderer, {
                         position: new AttributeData(gl, this.#positions),
                         normal: new AttributeData(gl, this.#normals),
