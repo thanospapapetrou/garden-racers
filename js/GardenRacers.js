@@ -135,16 +135,16 @@ class GardenRacers {
         this.#velocityDistance = 0.0;
         if (event.type == Event.KEY_DOWN) {
             switch (event.code) {
-            case KeyCode.ARROW_UP:
+            case KeyCode.A:
                 this.#velocityElevation = GardenRacers.#VELOCITY.elevation;
                 break;
-            case KeyCode.ARROW_DOWN:
+            case KeyCode.Z:
                 this.#velocityElevation = -GardenRacers.#VELOCITY.elevation;
                 break;
-            case KeyCode.ARROW_LEFT:
+            case KeyCode.Q:
                 this.#velocityAzimuth = GardenRacers.#VELOCITY.azimuth;
                 break;
-            case KeyCode.ARROW_RIGHT:
+            case KeyCode.W:
                 this.#velocityAzimuth = -GardenRacers.#VELOCITY.azimuth;
                 break;
             case KeyCode.PAGE_UP:
@@ -155,23 +155,25 @@ class GardenRacers {
                 break;
             }
         }
+        this.#bug.keyboard(event);
     }
 
     render(time) {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
         this.#garden.render(this.#projection, this.#camera, this.#model, GardenRacers.#LIGHT);
-        this.#bug.render(this.#projection, this.#camera, this.#model, GardenRacers.#LIGHT);
+        this.#bug.render(this.#projection, this.#camera, GardenRacers.#LIGHT);
         requestAnimationFrame(this.render.bind(this));
     }
 
     idle(time) {
         const dt = (time - this.#time) / GardenRacers.#MS_PER_S;
+        this.#time = time;
         this.fps = 1 / dt;
         this.azimuth += this.#velocityAzimuth * dt;
         this.elevation += this.#velocityElevation * dt;
         this.distance += this.#velocityDistance * dt;
-        this.#time = time;
+        this.#bug.idle(dt);
     }
 
     get #projection() {

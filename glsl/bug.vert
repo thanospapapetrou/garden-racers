@@ -11,5 +11,5 @@ out vec3 vertexNormal;
 
 void main(void) {
     gl_Position = projection * inverse(camera) * model * vec4(position, 1.0);
-    vertexNormal = normal;
+    vertexNormal = mat3(transpose(inverse(model))) * normal;
 }
