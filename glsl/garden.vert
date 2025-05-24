@@ -1,7 +1,7 @@
 #version 300 es
 
 uniform mat4 projection;
-uniform mat4 camera;
+uniform mat4 view;
 uniform mat4 model;
 
 in vec3 position;
@@ -20,7 +20,7 @@ out vec3 vertexNormal;
 out vec3[9] vertexTextureCoordinates;
 
 void main(void) {
-    gl_Position = projection * camera * model * vec4(position, 1.0);
+    gl_Position = projection * view * model * vec4(position, 1.0);
     vertexNormal = mat3(transpose(inverse(model))) * normal;
     vertexTextureCoordinates = vec3[](textureCoordinatesCenter, textureCoordinatesN, textureCoordinatesNE,
             textureCoordinatesE, textureCoordinatesSE, textureCoordinatesS,

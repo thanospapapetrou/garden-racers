@@ -161,8 +161,8 @@ class GardenRacers {
     render(time) {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
-        this.#garden.render(this.#projection, this.#camera, this.#model, GardenRacers.#LIGHT);
-        this.#bug.render(this.#projection, this.#camera, GardenRacers.#LIGHT);
+        this.#garden.render(this.#projection, this.#view, this.#model, GardenRacers.#LIGHT);
+        this.#bug.render(this.#projection, this.#view, GardenRacers.#LIGHT);
         requestAnimationFrame(this.render.bind(this));
     }
 
@@ -184,15 +184,12 @@ class GardenRacers {
         return projection;
     }
 
-    get #camera() {
-        const camera = mat4.create();
-        mat4.lookAt(camera, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.azimuth),
+    get #view() {
+        const view = mat4.create();
+        mat4.lookAt(view, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.azimuth),
                 this.#bug.y - 1 * Math.sin(this.#bug.azimuth), this.#bug.z + 1.0),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
-//        mat4.rotateZ(camera, camera, -this.azimuth);
-//        mat4.rotateX(camera, camera, Math.PI / 2 - this.elevation);
-//        mat4.translate(camera, camera, [0.0, 0.0, this.distance]);
-        return camera;
+        return view;
     }
 
     get #model() { // TODO this is not required

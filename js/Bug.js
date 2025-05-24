@@ -7,7 +7,7 @@ class Bug {
     static #SHADER_VERTEX = './glsl/bug.vert';
     static #UNIFORMS = {
         projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
-        camera: (gl, uniform, camera) => gl.uniformMatrix4fv(uniform, false, camera),
+        view: (gl, uniform, view) => gl.uniformMatrix4fv(uniform, false, view),
         model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
         light: {
             ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
@@ -82,8 +82,8 @@ class Bug {
         }
     }
 
-    render(projection, camera, light) {
-        this.#task.render({projection, camera, model: this.#model, light}); // TODO do not set all here
+    render(projection, view, light) {
+        this.#task.render({projection, view, model: this.#model, light}); // TODO do not set all here
     }
 
     idle(dt) {
