@@ -1,7 +1,7 @@
 'use strict';
 
 class Bug {
-    static #ATTRIBUTES = ['position'];
+    static #ATTRIBUTES = ['position', 'normal'];
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
     static #UNIFORMS = {
@@ -24,7 +24,8 @@ class Bug {
             const renderer = await new Renderer(gl, Bug.#SHADER_VERTEX, Bug.#SHADER_FRAGMENT, Bug.#UNIFORMS,
                     Bug.#ATTRIBUTES);
             this.#task = new RenderingTask(gl, renderer, {
-                position: new AttributeData(gl, this.#positions)
+                position: new AttributeData(gl, this.#positions),
+                normal: new AttributeData(gl, this.#normals)
             }, new IndexData(gl, this.#indices));
             return this;
         })();
@@ -53,6 +54,24 @@ class Bug {
         }
         positions.push(0.0, 0.0, -c);
         return positions;
+    }
+
+    get #normals() {
+        const sectors = 8;
+        const slices = 4;
+        const normals = [0.0, 0.0, 1.0];
+        for (let i = 1; i < slices; i++) {
+            const theta = i * Math.PI / slices;
+            for (let j = 0; j < sectors; j++) {
+                const phi = j * 2 * Math.PI / sectors;
+                const x = Math.sin(theta) * Math.cos(phi);
+                const y = Math.sin(theta) * Math.sin(phi);
+                const z = Math.cos(theta);
+                normals.push(x, y, z);
+            }
+        }
+        normals.push(0.0, 0.0, -1.0);
+        return normals;
     }
 
     get #indices() {
