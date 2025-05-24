@@ -186,9 +186,12 @@ class GardenRacers {
 
     get #camera() {
         const camera = mat4.create();
-        mat4.rotateZ(camera, camera, -this.azimuth);
-        mat4.rotateX(camera, camera, Math.PI / 2 - this.elevation);
-        mat4.translate(camera, camera, [0.0, 0.0, this.distance]);
+        mat4.lookAt(camera, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.azimuth),
+                this.#bug.y - 1 * Math.sin(this.#bug.azimuth), this.#bug.z + 1.0),
+                vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
+//        mat4.rotateZ(camera, camera, -this.azimuth);
+//        mat4.rotateX(camera, camera, Math.PI / 2 - this.elevation);
+//        mat4.translate(camera, camera, [0.0, 0.0, this.distance]);
         return camera;
     }
 

@@ -22,6 +22,7 @@ class Bug {
     #task;
     #x;
     #y;
+    #z;
     #azimuth;
     #velocity;
     #angularVelocity;
@@ -37,11 +38,28 @@ class Bug {
             }, new IndexData(gl, bug.indices));
             this.#x = 0.0;
             this.#y = 0.0;
+            this.#z = 0.1; // TODO
             this.#azimuth = 0.0;
             this.#velocity = 0.0;
             this.#angularVelocity = 0.0;
             return this;
         })();
+    }
+
+    get x() {
+        return this.#x;
+    }
+
+    get y() {
+        return this.#y;
+    }
+
+    get z() {
+        return this.#z;
+    }
+
+    get azimuth() {
+        return this.#azimuth;
     }
 
     keyboard(event) {
@@ -81,7 +99,7 @@ class Bug {
 
     get #model() {
         const model = mat4.create();
-        mat4.translate(model, model, [this.#x, this.#y, 0.0]);
+        mat4.translate(model, model, [this.#x, this.#y, this.#z]);
         mat4.rotateZ(model, model, this.#azimuth);
         return model;
     }
