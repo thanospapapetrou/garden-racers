@@ -48,7 +48,6 @@ class Garden {
                         textureCoordinatesSW: new AttributeData(gl, this.#getTextureCoordinates(Direction.SW)),
                         textureCoordinatesW: new AttributeData(gl, this.#getTextureCoordinates(Direction.W)),
                         textureCoordinatesNW: new AttributeData(gl, this.#getTextureCoordinates(Direction.NW))
-
                     }, new IndexData(gl, this.#indices));
             return this;
         })();
