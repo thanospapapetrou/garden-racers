@@ -109,7 +109,7 @@ class GardenRacers {
     }
 
     set elevation(elevation) {
-        this.#elevation = Math.min(Math.max(elevation, 0), Math.PI / 2);
+        this.#elevation = Math.min(Math.max(elevation, -Math.PI / 2), Math.PI / 2);
         document.querySelector(GardenRacers.#SELECTOR_ELEVATION).firstChild.nodeValue =
                 GardenRacers.#FORMAT_ANGLE(this.#elevation);
     }

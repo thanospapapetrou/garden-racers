@@ -35,15 +35,45 @@ class Bug {
     }
 
     get #positions() {
-        return [
-            0.0, 0.0, 1.0,
-            0.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            1.0, 0.0, 1.0
-        ];
+        const sectors = 8;
+        const slices = 4;
+        const a = 3;
+        const b = 4;
+        const c = 5;
+        const positions = [0.0, 0.0, c];
+        for (let i = 1; i < slices; i++) {
+            const theta = i * Math.PI / slices;
+            for (let j = 0; j < sectors; j++) {
+                const phi = j * 2 * Math.PI / sectors;
+                const x = a * Math.sin(theta) * Math.cos(phi);
+                const y = b * Math.sin(theta) * Math.sin(phi);
+                const z = c * Math.cos(theta);
+                positions.push(x, y, z);
+            }
+        }
+        positions.push(0.0, 0.0, -c);
+        return positions;
     }
 
     get #indices() {
-        return [0, 1, 2, 2, 3, 0];
+        const sectors = 8;
+        const slices = 4;
+        const indices = [];
+        for (let i = 0; i < sectors; i++) {
+            indices.push(0, i + 1, (i + 1) % sectors + 1);
+        }
+        for (let i = 0; i < slices - 2; i++) {
+            for (let j = 0; j < sectors; j++) {
+                indices.push(i * sectors + j + 1, (i + 1) * sectors + j + 1,
+                        (i + 1) * sectors + (j + 1) % sectors + 1);
+                indices.push((i + 1) * sectors + (j + 1) % sectors + 1, i * sectors + (j + 1) % sectors + 1,
+                        i * sectors + j + 1);
+            }
+        }
+        for (let i = 0; i < sectors; i++) {
+            indices.push((slices - 2) * sectors + i + 1, (slices - 1) * sectors + 2,
+                    (slices - 2) * sectors + (i + 1) % sectors + 1);
+        }
+        return indices;
     }
 }
