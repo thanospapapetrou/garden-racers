@@ -12,7 +12,10 @@ class RenderingTask { // TODO https://gist.github.com/jialiang/2880d4cc3364df117
         this.#array = this.#gl.createVertexArray();
         this.#gl.bindVertexArray(this.#array);
         for (let attribute of Object.keys(attributes)) {
-            this.#renderer.attributes[attribute] = attributes[attribute];
+            gl.bindBuffer(gl.ARRAY_BUFFER, attributes[attribute].buffer);
+            gl.vertexAttribPointer(this.#renderer.attributes[attribute], Vector.COMPONENTS, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(this.#renderer.attributes[attribute]);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
         }
         this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices.vbo);
         this.#gl.bindVertexArray(null);

@@ -14,9 +14,10 @@ class Renderer {
         return (async () => {
             const vert = await new Shader(gl, gl.VERTEX_SHADER, vertex);
             const frag = await new Shader(gl, gl.FRAGMENT_SHADER, fragment);
-            this.#program = new Program(gl, vert, frag, Object.keys(uniforms), attributes).program;
+            const program = new Program(gl, vert, frag, Object.keys(uniforms), attributes);
+            this.#program = program.program;
             this.#uniforms = this.#resolveUniforms('', uniforms);
-            this.#resolveAttributes(attributes);
+            this.#attributes = program.attributes;
             return this;
         })();
     }
@@ -52,21 +53,5 @@ class Renderer {
             }
         }
         return result;
-    }
-
-    #resolveAttributes(attributes) {
-        this.#attributes = {};
-        const gl = this.#gl;
-        for (let attribute of attributes) {
-            const location = this.#gl.getAttribLocation(this.#program, attribute);
-            Object.defineProperty(this.#attributes, attribute, {
-                set(data) {
-                    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
-                    gl.vertexAttribPointer(location, Vector.COMPONENTS, gl.FLOAT, false, 0, 0);
-                    gl.enableVertexAttribArray(location);
-                    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-                }
-            });
-        }
     }
 }
