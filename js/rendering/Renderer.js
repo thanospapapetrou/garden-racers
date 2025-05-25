@@ -2,8 +2,6 @@
 
 class Renderer {
     static #DELIMITER = '.';
-    static #ERROR_COMPILING = (type, url, info) => `Error compiling ${(type == WebGLRenderingContext.VERTEX_SHADER) ? 'vertex' : 'fragment'} shader ${url}: ${info}`;
-    static #ERROR_LINKING = (vertex, fragment, info) => `Error linking program (${vertex}, ${fragment}): ${info}`;
     static #TYPE_FUNCTION = 'function';
 
     #gl;
@@ -14,7 +12,9 @@ class Renderer {
     constructor(gl, vertex, fragment, uniforms, attributes) {
         this.#gl = gl;
         return (async () => {
-            this.#program = await this.#link(vertex, fragment);
+            const vert = await new Shader(gl, gl.VERTEX_SHADER, vertex);
+            const frag = await new Shader(gl, gl.FRAGMENT_SHADER, fragment);
+            this.#program = new Program(gl, vert, frag, Object.keys(uniforms), attributes).program;
             this.#uniforms = this.#resolveUniforms('', uniforms);
             this.#resolveAttributes(attributes);
             return this;
@@ -31,32 +31,6 @@ class Renderer {
 
     get attributes() {
         return this.#attributes;
-    }
-
-    async #link(vertex, fragment) {
-        const program = this.#gl.createProgram();
-        this.#gl.attachShader(program, (await new Shader(this.#gl, this.#gl.VERTEX_SHADER, vertex)).shader);
-        this.#gl.attachShader(program, (await new Shader(this.#gl, this.#gl.FRAGMENT_SHADER, fragment)).shader);
-        this.#gl.linkProgram(program);
-        if (!this.#gl.getProgramParameter(program, this.#gl.LINK_STATUS)) {
-            const info = this.#gl.getProgramInfoLog(program);
-            this.#gl.deleteProgram(program);
-            throw new Error(Renderer.#ERROR_LINKING(vertex, fragment, info));
-        }
-        return program;
-    }
-
-    async #compile(url, type) {
-        return (await new Shader(this.#gl, type, url)).shader;
-//        const shader = this.#gl.createShader(type);
-//        this.#gl.shaderSource(shader, await (await GardenRacers.load(url)).text());
-//        this.#gl.compileShader(shader);
-//        if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
-//            const info = this.#gl.getShaderInfoLog(shader);
-//            this.#gl.deleteShader(shader);
-//            throw new Error(Renderer.#ERROR_COMPILING(type, url, info))
-//        }
-//        return shader;
     }
 
     #resolveUniforms(prefix, uniforms) {
