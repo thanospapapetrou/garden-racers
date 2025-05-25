@@ -21,6 +21,7 @@ class Shader {
                 gl.deleteShader(this.#shader);
                 throw new Error(Shader.#ERROR_COMPILING(type, url, info));
             }
+            this.toString = () => url;
             return this;
         })();
     }

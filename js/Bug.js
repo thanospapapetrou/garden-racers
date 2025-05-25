@@ -37,7 +37,7 @@ class Bug {
             this.#task = new RenderingTask(gl, renderer, {
                 position: new AttributeData(gl, bug.positions),
                 normal: new AttributeData(gl, bug.normals)
-            }, new IndexData(gl, bug.indices));
+            }, new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices), gl.STATIC_DRAW), bug.indices.length);
             this.#x = 0.0;
             this.#y = 0.0;
             this.#z = 0.0;

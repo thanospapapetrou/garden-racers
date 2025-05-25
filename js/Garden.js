@@ -48,7 +48,7 @@ class Garden {
                         textureCoordinatesSW: new AttributeData(gl, this.#getTextureCoordinates(Direction.SW)),
                         textureCoordinatesW: new AttributeData(gl, this.#getTextureCoordinates(Direction.W)),
                         textureCoordinatesNW: new AttributeData(gl, this.#getTextureCoordinates(Direction.NW))
-                    }, new IndexData(gl, this.#indices));
+                    }, new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices), gl.STATIC_DRAW), this.#indices.length);
             return this;
         })();
     }

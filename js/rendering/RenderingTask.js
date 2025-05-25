@@ -6,7 +6,7 @@ class RenderingTask { // TODO https://gist.github.com/jialiang/2880d4cc3364df117
     #array;
     #count;
 
-    constructor(gl, renderer, attributes, indices) {
+    constructor(gl, renderer, attributes, indices, count) {
         this.#gl = gl;
         this.#renderer = renderer;
         this.#array = this.#gl.createVertexArray();
@@ -14,10 +14,10 @@ class RenderingTask { // TODO https://gist.github.com/jialiang/2880d4cc3364df117
         for (let attribute of Object.keys(attributes)) {
             this.#renderer.attributes[attribute] = attributes[attribute];
         }
-        this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices.buffer);
+        this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, indices.vbo);
         this.#gl.bindVertexArray(null);
         this.#gl.bindBuffer(this.#gl.ELEMENT_ARRAY_BUFFER, null);
-        this.#count = indices.count;
+        this.#count = count;
     }
 
     render(uniforms) {
