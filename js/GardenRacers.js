@@ -68,7 +68,7 @@ class GardenRacers {
         this.#gl = gl;
         return (async () => {
             this.#garden = await new Garden(this.#gl, garden);
-            this.#bug = await new Bug(this.#gl);
+            this.#bug = await new Bug(this.#gl, this.#garden);
             this.azimuth = 0.0;
             this.elevation = 0.0;
             this.distance = GardenRacers.#DISTANCE.max;
@@ -186,8 +186,8 @@ class GardenRacers {
 
     get #view() {
         const view = mat4.create();
-        mat4.lookAt(view, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.azimuth),
-                this.#bug.y - 1 * Math.sin(this.#bug.azimuth), this.#bug.z + 1.0),
+        mat4.lookAt(view, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.yaw),
+                this.#bug.y - 1 * Math.sin(this.#bug.yaw), this.#bug.z + 1.0),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
         return view;
     }

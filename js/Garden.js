@@ -53,6 +53,21 @@ class Garden {
         })();
     }
 
+    get latitude() {
+        return this.#garden.latitude;
+    }
+
+    get longitude() {
+        return this.#garden.longitude;
+    }
+
+    getAltitude(latitude, longitude) { // TODO improve
+        return (this.#getAltitude(Math.floor(latitude), Math.floor(longitude))
+                + this.#getAltitude(Math.floor(latitude), Math.ceil(longitude))
+                + this.#getAltitude(Math.ceil(latitude), Math.floor(longitude))
+                + this.#getAltitude(Math.ceil(latitude), Math.ceil(longitude))) / 4;
+    }
+
     render(projection, view, model, light) {
         this.#task.render({projection, view, model, light}); // TODO do not set all here
     }

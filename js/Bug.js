@@ -19,16 +19,18 @@ class Bug {
     };
     static #VELOCITY = 1.0;
 
+    #garden;
     #task;
     #x;
     #y;
     #z;
-    #azimuth;
+    #yaw;
     #velocity;
     #angularVelocity;
 
-    constructor(gl) {
+    constructor(gl, garden) {
         return (async () => {
+            this.#garden = garden;
             const renderer = await new Renderer(gl, Bug.#SHADER_VERTEX, Bug.#SHADER_FRAGMENT, Bug.#UNIFORMS,
                     Bug.#ATTRIBUTES);
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8);
@@ -38,8 +40,8 @@ class Bug {
             }, new IndexData(gl, bug.indices));
             this.#x = 0.0;
             this.#y = 0.0;
-            this.#z = 0.1; // TODO
-            this.#azimuth = 0.0;
+            this.#z = 0.0;
+            this.#yaw = 0.0;
             this.#velocity = 0.0;
             this.#angularVelocity = 0.0;
             return this;
@@ -58,8 +60,8 @@ class Bug {
         return this.#z;
     }
 
-    get azimuth() {
-        return this.#azimuth;
+    get yaw() {
+        return this.#yaw;
     }
 
     keyboard(event) {
@@ -87,20 +89,21 @@ class Bug {
     }
 
     idle(dt) {
-        this.#x += Math.cos(this.#azimuth) * this.#velocity * dt;
-        this.#y += Math.sin(this.#azimuth) * this.#velocity * dt;
-        this.#azimuth = this.#azimuth + this.#angularVelocity * dt;
-        if (this.#azimuth < 0) {
-            this.#azimuth += 2 * Math.PI;
-        } else if (this.#azimuth >= 2 * Math.PI) {
-            this.#azimuth -= 2 * Math.PI;
+        this.#x = Math.min(Math.max(this.#x + Math.cos(this.#yaw) * this.#velocity * dt, 0), this.#garden.longitude);
+        this.#y = Math.min(Math.max(this.#y + Math.sin(this.#yaw) * this.#velocity * dt, 0), this.#garden.latitude);
+        this.#z = this.#garden.getAltitude(this.#y, this.#x);
+        this.#yaw = this.#yaw + this.#angularVelocity * dt;
+        if (this.#yaw < 0) {
+            this.#yaw += 2 * Math.PI;
+        } else if (this.#yaw >= 2 * Math.PI) {
+            this.#yaw -= 2 * Math.PI;
         }
     }
 
     get #model() {
         const model = mat4.create();
         mat4.translate(model, model, [this.#x, this.#y, this.#z]);
-        mat4.rotateZ(model, model, this.#azimuth);
+        mat4.rotateZ(model, model, this.#yaw);
         return model;
     }
 }
