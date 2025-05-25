@@ -28,7 +28,7 @@ class Bug {
     #velocity;
     #angularVelocity;
 
-    constructor(gl, garden) {
+    constructor(gl, garden) { // TODO improve camera, animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
         return (async () => {
             this.#garden = garden;
             const renderer = await new Renderer(gl, Bug.#SHADER_VERTEX, Bug.#SHADER_FRAGMENT, Bug.#UNIFORMS,
