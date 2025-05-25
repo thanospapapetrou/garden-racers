@@ -35,8 +35,8 @@ class Renderer {
 
     async #link(vertex, fragment) {
         const program = this.#gl.createProgram();
-        this.#gl.attachShader(program, await this.#compile(vertex, this.#gl.VERTEX_SHADER));
-        this.#gl.attachShader(program, await this.#compile(fragment, this.#gl.FRAGMENT_SHADER));
+        this.#gl.attachShader(program, (await new Shader(this.#gl, this.#gl.VERTEX_SHADER, vertex)).shader);
+        this.#gl.attachShader(program, (await new Shader(this.#gl, this.#gl.FRAGMENT_SHADER, fragment)).shader);
         this.#gl.linkProgram(program);
         if (!this.#gl.getProgramParameter(program, this.#gl.LINK_STATUS)) {
             const info = this.#gl.getProgramInfoLog(program);
@@ -47,15 +47,16 @@ class Renderer {
     }
 
     async #compile(url, type) {
-        const shader = this.#gl.createShader(type);
-        this.#gl.shaderSource(shader, await (await GardenRacers.load(url)).text());
-        this.#gl.compileShader(shader);
-        if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
-            const info = this.#gl.getShaderInfoLog(shader);
-            this.#gl.deleteShader(shader);
-            throw new Error(Renderer.#ERROR_COMPILING(type, url, info))
-        }
-        return shader;
+        return (await new Shader(this.#gl, type, url)).shader;
+//        const shader = this.#gl.createShader(type);
+//        this.#gl.shaderSource(shader, await (await GardenRacers.load(url)).text());
+//        this.#gl.compileShader(shader);
+//        if (!this.#gl.getShaderParameter(shader, this.#gl.COMPILE_STATUS)) {
+//            const info = this.#gl.getShaderInfoLog(shader);
+//            this.#gl.deleteShader(shader);
+//            throw new Error(Renderer.#ERROR_COMPILING(type, url, info))
+//        }
+//        return shader;
     }
 
     #resolveUniforms(prefix, uniforms) {
