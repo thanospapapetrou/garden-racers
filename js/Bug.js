@@ -34,10 +34,12 @@ class Bug {
             const renderer = await new Renderer(gl, Bug.#SHADER_VERTEX, Bug.#SHADER_FRAGMENT, Bug.#UNIFORMS,
                     Bug.#ATTRIBUTES);
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8);
-            this.#task = new RenderingTask(gl, renderer, {
-                position: new AttributeData(gl, bug.positions),
-                normal: new AttributeData(gl, bug.normals)
-            }, new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices), gl.STATIC_DRAW), bug.indices.length);
+            this.#task = new RenderingTask(gl, renderer, [
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
+                    location: renderer.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.normals)),
+                    location: renderer.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT}
+            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices), gl.STATIC_DRAW), bug.indices.length);
             this.#x = 0.0;
             this.#y = 0.0;
             this.#z = 0.0;

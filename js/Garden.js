@@ -36,22 +36,39 @@ class Garden {
             const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
             renderer.uniforms.terrains = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAINS);
-            this.#task = new RenderingTask(gl, renderer, {
-                        position: new AttributeData(gl, this.#positions),
-                        normal: new AttributeData(gl, this.#normals),
-                        textureCoordinatesCenter: new AttributeData(gl, this.#getTextureCoordinates(null)),
-                        textureCoordinatesN: new AttributeData(gl, this.#getTextureCoordinates(Direction.N)),
-                        textureCoordinatesNE: new AttributeData(gl, this.#getTextureCoordinates(Direction.NE)),
-                        textureCoordinatesE: new AttributeData(gl, this.#getTextureCoordinates(Direction.E)),
-                        textureCoordinatesSE: new AttributeData(gl, this.#getTextureCoordinates(Direction.SE)),
-                        textureCoordinatesS: new AttributeData(gl, this.#getTextureCoordinates(Direction.S)),
-                        textureCoordinatesSW: new AttributeData(gl, this.#getTextureCoordinates(Direction.SW)),
-                        textureCoordinatesW: new AttributeData(gl, this.#getTextureCoordinates(Direction.W)),
-                        textureCoordinatesNW: new AttributeData(gl, this.#getTextureCoordinates(Direction.NW))
-                    }, new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices), gl.STATIC_DRAW), this.#indices.length);
+            this.#task = new RenderingTask(gl, renderer, [
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#positions)),
+                    location: renderer.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#normals)),
+                    location: renderer.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(null))),
+                    location: renderer.attributes.textureCoordinatesCenter, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.N))),
+                    location: renderer.attributes.textureCoordinatesN, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NE))),
+                    location: renderer.attributes.textureCoordinatesNE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.E))),
+                    location: renderer.attributes.textureCoordinatesE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SE))),
+                    location: renderer.attributes.textureCoordinatesSE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.S))),
+                    location: renderer.attributes.textureCoordinatesS, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SW))),
+                    location: renderer.attributes.textureCoordinatesSW, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.W))),
+                    location: renderer.attributes.textureCoordinatesW, size: Vector.COMPONENTS, type: gl.FLOAT},
+                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NW))),
+                    location: renderer.attributes.textureCoordinatesNW, size: Vector.COMPONENTS, type: gl.FLOAT}
+            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)), this.#indices.length);
             return this;
         })();
     }
+
+//    // TODO
+//    #getAttribute(location, data) {
+//        return {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(data)), location,
+//                size: Vector.COMPONENTS, type: gl.FLOAT};
+//    }
 
     get latitude() {
         return this.#garden.latitude;
