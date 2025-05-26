@@ -8,12 +8,12 @@ class Shader {
     #shader;
 
     constructor(gl, type, url) {
-        this.#shader = gl.createShader(type);
         return (async () => {
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(Shader.#ERROR_LOADING(type, url, response.status));
             }
+            this.#shader = gl.createShader(type);
             gl.shaderSource(this.#shader, await response.text());
             gl.compileShader(this.#shader);
             if (!gl.getShaderParameter(this.#shader, gl.COMPILE_STATUS)) {

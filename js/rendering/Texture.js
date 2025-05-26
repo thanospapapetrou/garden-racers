@@ -1,7 +1,7 @@
 'use strict';
 
 class Texture {
-    static #ERROR_LOADING = (url) => `Error loading ${url}`;
+    static #ERROR_LOADING = (url) => `Error loading texture ${url}`;
 
     #unit;
     #width;
@@ -13,13 +13,11 @@ class Texture {
                 const image = new Image();
                 image.onload = () => resolve(image);
                 image.onerror = () => {
-                    throw new Error(Texture.#ERROR_LOADING(url)); // TODO rejections
+                    throw new Error(Texture.#ERROR_LOADING(url)); // TODO reject?
                 };
                 image.src = url;
             });
             this.#unit = unit;
-            this.#width = image.width;
-            this.#height = image.height;
             const texture = gl.createTexture();
             gl.activeTexture(this.#unit);
             gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -29,6 +27,9 @@ class Texture {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
             gl.generateMipmap(gl.TEXTURE_2D);
+            this.#width = image.width;
+            this.#height = image.height;
+            // TODO unbind and make inactive
             return this;
         })();
     }

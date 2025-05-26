@@ -10,37 +10,37 @@ class Bug {
     static #VELOCITY = 1.0;
 
     #gl;
-    #garden;
+    #program;
+    #vao;
     #count;
+    #garden;
     #x;
     #y;
     #z;
     #yaw;
     #velocity;
     #angularVelocity;
-    #program;
-    #vao;
 
     constructor(gl, garden) { // TODO improve camera, animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
         this.#gl = gl;
-        this.#garden = garden;
-        const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
-        this.#count = bug.indices.length;
-        this.#x = 0.0;
-        this.#y = 0.0;
-        this.#z = 0.0;
-        this.#yaw = 0.0;
-        this.#velocity = 0.0;
-        this.#angularVelocity = 0.0;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), Bug.#UNIFORMS, Bug.#ATTRIBUTES);
+            const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
                     location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.normals)),
                     location: this.#program.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT}
             ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices)));
+            this.#count = bug.indices.length;
+            this.#garden = garden;
+            this.#x = 0.0;
+            this.#y = 0.0;
+            this.#z = 0.0;
+            this.#yaw = 0.0;
+            this.#velocity = 0.0;
+            this.#angularVelocity = 0.0;
             return this;
         })();
     }
@@ -83,7 +83,7 @@ class Bug {
 
     render(projection, view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection); // TODO do not set all here
         this.#gl.uniformMatrix4fv(this.#program.uniforms.view, false, view);
         this.#gl.uniformMatrix4fv(this.#program.uniforms.model, false, this.#model);
         this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
