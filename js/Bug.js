@@ -5,47 +5,42 @@ class Bug {
     static #ATTRIBUTES = ['position', 'normal'];
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
-    static #UNIFORMS = {
-        projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
-        view: (gl, uniform, view) => gl.uniformMatrix4fv(uniform, false, view),
-        model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        light: {
-            ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-            directional: {
-                color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-                direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
-            }
-        }
-    };
+    static #UNIFORMS = ['projection', 'view', 'model', 'light.ambient', 'light.directional.color',
+            'light.directional.direction'];
     static #VELOCITY = 1.0;
 
+    #gl;
     #garden;
-    #task;
+    #count;
     #x;
     #y;
     #z;
     #yaw;
     #velocity;
     #angularVelocity;
+    #program;
+    #vao;
 
     constructor(gl, garden) { // TODO improve camera, animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
+        this.#gl = gl;
+        this.#garden = garden;
+        const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
+        this.#count = bug.indices.length;
+        this.#x = 0.0;
+        this.#y = 0.0;
+        this.#z = 0.0;
+        this.#yaw = 0.0;
+        this.#velocity = 0.0;
+        this.#angularVelocity = 0.0;
         return (async () => {
-            this.#garden = garden;
-            const renderer = await new Renderer(gl, Bug.#SHADER_VERTEX, Bug.#SHADER_FRAGMENT, Bug.#UNIFORMS,
-                    Bug.#ATTRIBUTES);
-            const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8);
-            this.#task = new RenderingTask(gl, renderer, [
+            this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
+                    await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), Bug.#UNIFORMS, Bug.#ATTRIBUTES);
+            this.#vao = new VertexArrayObject(gl, [
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
-                    location: renderer.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.normals)),
-                    location: renderer.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT}
-            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices), gl.STATIC_DRAW), bug.indices.length);
-            this.#x = 0.0;
-            this.#y = 0.0;
-            this.#z = 0.0;
-            this.#yaw = 0.0;
-            this.#velocity = 0.0;
-            this.#angularVelocity = 0.0;
+                    location: this.#program.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT}
+            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices)));
             return this;
         })();
     }
@@ -87,7 +82,16 @@ class Bug {
     }
 
     render(projection, view, light) {
-        this.#task.render({projection, view, model: this.#model, light}); // TODO do not set all here
+        this.#gl.useProgram(this.#program.program);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.view, false, view);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.model, false, this.#model);
+        this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
+        this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
+        this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
+        this.#gl.bindVertexArray(this.#vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
+        this.#gl.bindVertexArray(null);
     }
 
     idle(dt) {

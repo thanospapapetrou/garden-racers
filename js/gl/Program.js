@@ -2,6 +2,7 @@
 
 class Program {
     static #ERROR_LINKING = (vertex, fragment, info) => `Error linking program (${vertex}, ${fragment}): ${info}`;
+
     #program;
     #uniforms;
     #attributes;
@@ -16,11 +17,11 @@ class Program {
             gl.deleteProgram(this.#program);
             throw new Error(Program.#ERROR_LINKING(vertex, fragment, info));
         }
-        this.#uniforms = [];
+        this.#uniforms = {};
         for (let uniform of uniforms) {
             this.#uniforms[uniform] = gl.getUniformLocation(this.#program, uniform);
         }
-        this.#attributes = [];
+        this.#attributes = {};
         for (let attribute of attributes) {
             this.#attributes[attribute] = gl.getAttribLocation(this.#program, attribute);
         }
