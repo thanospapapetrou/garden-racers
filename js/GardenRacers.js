@@ -10,7 +10,6 @@ class GardenRacers {
         min: 0.1, // 0.1 m
         max: 20.0 // 20 m
     };
-    static #ERROR_LOADING = (url, status) => `Error loading ${url}: HTTP status ${status}`;
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
     static #FORMAT_DISTANCE = (distance) => `${distance} m`;
     static #LIGHT = {
@@ -54,14 +53,6 @@ class GardenRacers {
         const gl = document.querySelector(GardenRacers.#SELECTOR_CANVAS).getContext(GardenRacers.#CONTEXT);
         const racers = await new GardenRacers(gl, './json/garden.json');
         requestAnimationFrame(racers.render.bind(racers));
-    }
-
-    static async load(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(Carousel.#ERROR_LOADING(url, response.status));
-        }
-        return response;
     }
 
     constructor(gl, garden) {

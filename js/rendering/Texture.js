@@ -4,8 +4,6 @@ class Texture {
     static #ERROR_LOADING = (url) => `Error loading texture ${url}`;
 
     #unit;
-    #width;
-    #height;
 
     constructor(gl, unit, url) {
         return (async () => {
@@ -27,8 +25,6 @@ class Texture {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
             gl.generateMipmap(gl.TEXTURE_2D);
-            this.#width = image.width;
-            this.#height = image.height;
             // TODO unbind and make inactive
             return this;
         })();
@@ -36,13 +32,5 @@ class Texture {
 
     get unit() {
         return this.#unit;
-    }
-
-    get width() { // tODO remove
-        return this.#width;
-    }
-
-    get height() { // TODO remove
-        return this.#height();
     }
 }
