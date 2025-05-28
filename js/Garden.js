@@ -4,71 +4,66 @@ class Garden {
     static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
             'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
             'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
+    static #ERROR_LOADING = (url, status) => `Error loading garden ${url}: HTTP status ${status}`;
     static #IMAGE_TERRAINS = './img/terrains.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #STEP_LATTICE = 0.5;
     static #STEP_TEXTURE = 0.25;
-    static #UNIFORMS = {
-        projection: (gl, uniform, projection) => gl.uniformMatrix4fv(uniform, false, projection),
-        view: (gl, uniform, view) => gl.uniformMatrix4fv(uniform, false, view),
-        model: (gl, uniform, model) => gl.uniformMatrix4fv(uniform, false, model),
-        light: {
-            ambient: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-            directional: {
-                color: (gl, uniform, color) => gl.uniform3fv(uniform, color),
-                direction: (gl, uniform, direction) => gl.uniform3fv(uniform, direction)
-            }
-        },
-        terrains: (gl, uniform, terrains) => gl.uniform1i(uniform, terrains.unit - gl.TEXTURE0)
-    };
+    static #UNIFORMS = ['projection', 'view', 'model', 'light.ambient', 'light.directional.color',
+            'light.directional.direction', 'terrains'];
 
+    #gl;
+    #program;
+    #terrains;
     #garden;
     #positionLattice;
     #normalLattice;
-    #task;
+    #vao;
+    #count;
 
     constructor(gl, url) {
+        this.#gl = gl;
         return (async () => {
-            this.#garden = await(await GardenRacers.load(url)).json();
+            this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
+                    await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
+                    Garden.#ATTRIBUTES);
+            this.#terrains = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAINS);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(Shader.#ERROR_LOADING(url, response.status));
+            }
+            this.#garden = await response.json();
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
-            const renderer = await new Renderer(gl, Garden.#SHADER_VERTEX, Garden.#SHADER_FRAGMENT, Garden.#UNIFORMS,
-                    Garden.#ATTRIBUTES);
-            renderer.uniforms.terrains = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAINS);
-            this.#task = new RenderingTask(gl, renderer, [
+            this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#positions)),
-                    location: renderer.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#normals)),
-                    location: renderer.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(null))),
-                    location: renderer.attributes.textureCoordinatesCenter, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesCenter, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.N))),
-                    location: renderer.attributes.textureCoordinatesN, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesN, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NE))),
-                    location: renderer.attributes.textureCoordinatesNE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesNE, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.E))),
-                    location: renderer.attributes.textureCoordinatesE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesE, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SE))),
-                    location: renderer.attributes.textureCoordinatesSE, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesSE, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.S))),
-                    location: renderer.attributes.textureCoordinatesS, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesS, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SW))),
-                    location: renderer.attributes.textureCoordinatesSW, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesSW, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.W))),
-                    location: renderer.attributes.textureCoordinatesW, size: Vector.COMPONENTS, type: gl.FLOAT},
+                    location: this.#program.attributes.textureCoordinatesW, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NW))),
-                    location: renderer.attributes.textureCoordinatesNW, size: Vector.COMPONENTS, type: gl.FLOAT}
-            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)), this.#indices.length);
+                    location: this.#program.attributes.textureCoordinatesNW, size: Vector.COMPONENTS, type: gl.FLOAT}
+            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)));
+            this.#count = this.#indices.length;
             return this;
         })();
     }
-
-//    // TODO
-//    #getAttribute(location, data) {
-//        return {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(data)), location,
-//                size: Vector.COMPONENTS, type: gl.FLOAT};
-//    }
 
     get latitude() {
         return this.#garden.latitude;
@@ -86,7 +81,17 @@ class Garden {
     }
 
     render(projection, view, model, light) {
-        this.#task.render({projection, view, model, light}); // TODO do not set all here
+        this.#gl.useProgram(this.#program.program);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection); // TODO do not set all here
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.view, false, view);
+        this.#gl.uniformMatrix4fv(this.#program.uniforms.model, false, model);
+        this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
+        this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
+        this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
+//        this.$gl.uniform1i(this.#program.uniforms.terrains, this.#terrains.unit - this.#gl.TEXTURE0); // TODO simplify
+        this.#gl.bindVertexArray(this.#vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
+        this.#gl.bindVertexArray(null);
     }
 
     get #positions() {

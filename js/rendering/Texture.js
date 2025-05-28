@@ -38,11 +38,11 @@ class Texture {
         return this.#unit;
     }
 
-    get width() {
+    get width() { // tODO remove
         return this.#width;
     }
 
-    get height() {
+    get height() { // TODO remove
         return this.#height();
     }
 }

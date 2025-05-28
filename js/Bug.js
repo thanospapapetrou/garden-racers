@@ -27,7 +27,7 @@ class Bug {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), Bug.#UNIFORMS, Bug.#ATTRIBUTES);
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
-            this.#vao = new VertexArrayObject(gl, [
+            this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
                     location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.normals)),
