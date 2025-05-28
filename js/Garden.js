@@ -10,6 +10,7 @@ class Garden {
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #STEP_LATTICE = 0.5;
     static #STEP_TEXTURE = 0.25;
+    static #TEXTURE_TERRAINS = 0;
     static #UNIFORMS = ['projection', 'view', 'model', 'light.ambient', 'light.directional.color',
             'light.directional.direction', 'terrains'];
 
@@ -28,7 +29,7 @@ class Garden {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            this.#terrains = await new Texture(gl, gl.TEXTURE0, Garden.#IMAGE_TERRAINS);
+            this.#terrains = await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(Shader.#ERROR_LOADING(url, response.status));
@@ -88,7 +89,7 @@ class Garden {
         this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
         this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
         this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
-//        this.$gl.uniform1i(this.#program.uniforms.terrains, this.#terrains.unit - this.#gl.TEXTURE0); // TODO simplify
+        this.#gl.uniform1i(this.#program.uniforms.terrains, this.#terrains.unit);
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
