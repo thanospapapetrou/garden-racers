@@ -1,8 +1,10 @@
 #version 300 es
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform vertexUniforms {
+    mat4 projection;
+    mat4 view;
+    mat4 model;
+};
 
 in vec3 position;
 in vec3 normal;
