@@ -12,6 +12,7 @@ class Bug {
     #gl;
     #program;
     #ubo;
+    #ubo2;
     #vao;
     #count;
     #garden;
@@ -29,6 +30,9 @@ class Bug {
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
             this.#ubo = new UniformBufferObject(gl, this.#program.program, 'vertexUniforms', 0,
                     ['projection', 'view', 'model']);
+            this.#ubo2 = new UniformBufferObject(gl, this.#program.program, 'light', 1,
+                    ['ambient', 'color', 'direction']);
+
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
@@ -90,13 +94,18 @@ class Bug {
         this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.view, view, 0);
         this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.model, this.#model, 0);
         this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
+        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo2.ubo);
+        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets.ambient, new Float32Array(light.ambient));
+        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets.color, new Float32Array(light.directional.color));
+        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets.direction, new Float32Array(light.directional.direction));
+        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
         this.#gl.useProgram(this.#program.program);
 //        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection); // TODO do not set all here
 //        this.#gl.uniformMatrix4fv(this.#program.uniforms.view, false, view);
 //        this.#gl.uniformMatrix4fv(this.#program.uniforms.model, false, this.#model);
-        this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
-        this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
-        this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
+//        this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
+//        this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
+//        this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
