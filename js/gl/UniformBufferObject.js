@@ -2,6 +2,7 @@
 
 class UniformBufferObject {
     #ubo;
+    #offsets;
 
     constructor(gl, program, name, index, names) {
         const blockIndex = gl.getUniformBlockIndex(program, name);
@@ -16,6 +17,18 @@ class UniformBufferObject {
         const uboVariableOffsets = gl.getActiveUniforms(program, uboVariableIndices, gl.UNIFORM_OFFSET);
 
         gl.uniformBlockBinding(program, blockIndex, index);
+        this.#offsets = {};
+        for (let i = 0; i < names.length; i++) {
+            this.#offsets[names[i]] = uboVariableOffsets[i];
+        }
+    }
+
+    get ubo() {
+        return this.#ubo;
+    }
+
+    get offsets() {
+        return this.#offsets;
     }
 
 //
