@@ -26,10 +26,10 @@ class Bug {
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
-            this.#projectionViewModel = new UniformBufferObject(gl, 0, this.#program.program, 'projectionViewModel',
+            this.#projectionViewModel = new UniformBufferObject(gl, 2, this.#program.program, 'projectionViewModel',
                     ['projection', 'view', 'model']);
             this.#projectionViewModel.setUniforms({projection});
-            this.#light = new UniformBufferObject(gl, 1, this.#program.program, 'light',
+            this.#light = new UniformBufferObject(gl, 3, this.#program.program, 'light',
                     ['ambient', 'directional.color', 'directional.direction']);
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [ // TODO improve

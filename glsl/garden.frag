@@ -11,7 +11,6 @@ uniform light {
     vec3 ambient;
     Directional directional;
 };
-
 uniform sampler2D terrains;
 
 in vec3 vertexNormal;

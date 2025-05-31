@@ -31,10 +31,10 @@ class Garden {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            this.#projectionView = new UniformBufferObject(gl, 2, this.#program.program, 'projectionView',
+            this.#projectionView = new UniformBufferObject(gl, 0, this.#program.program, 'projectionView',
                     ['projection', 'view']);
             this.#projectionView.setUniforms({projection});
-            this.#light = new UniformBufferObject(gl, 3, this.#program.program, 'light', ['ambient',
+            this.#light = new UniformBufferObject(gl, 1, this.#program.program, 'light', ['ambient',
                 'directional.direction', 'directional.color']);
             this.#terrains = await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
             this.#gl.useProgram(this.#program.program);
