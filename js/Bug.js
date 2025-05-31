@@ -11,8 +11,8 @@ class Bug {
 
     #gl;
     #program;
-    #ubo;
-    #ubo2;
+    #projectionViewModel;
+    #light;
     #vao;
     #count;
     #garden;
@@ -28,14 +28,11 @@ class Bug {
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
-            this.#ubo = new UniformBufferObject(gl, this.#program.program, 'projectionViewModel',
+            this.#projectionViewModel = new UniformBufferObject(gl, this.#program.program, 'projectionViewModel',
                     ['projection', 'view', 'model'], 0);
-            this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo.ubo);
-            this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.projection, projection, 0);
-            this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
-            this.#ubo2 = new UniformBufferObject(gl, this.#program.program, 'light',
+            this.#projectionViewModel.setUniforms({projection});
+            this.#light = new UniformBufferObject(gl, this.#program.program, 'light',
                     ['ambient', 'directional.color', 'directional.direction'], 1);
-
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
@@ -92,17 +89,11 @@ class Bug {
     }
 
     render(view, light) {
-        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo.ubo);
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.view, view, 0);
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.model, this.#model, 0);
-        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
-        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo2.ubo);
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets.ambient, new Float32Array(light.ambient));
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets['directional.color'], new Float32Array(light.directional.color));
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo2.offsets['directional.direction'], new Float32Array(light.directional.direction));
-        this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
-        
         this.#gl.useProgram(this.#program.program);
+        this.#projectionViewModel.setUniforms({view: view, model: this.#model});
+        this.#light.setUniforms({ambient: new Float32Array(light.ambient),
+            'directional.color': new Float32Array(light.directional.color),
+            'directional.direction': new Float32Array(light.directional.direction)});
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
