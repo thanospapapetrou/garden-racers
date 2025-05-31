@@ -16,6 +16,7 @@ class Garden {
 
     #gl;
     #program;
+    #projectionView;
     #terrains;
     #garden;
     #positionLattice;
@@ -23,12 +24,15 @@ class Garden {
     #vao;
     #count;
 
-    constructor(gl, url) {
+    constructor(gl, url, projection) {
         this.#gl = gl;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
+            this.#projectionView = new UniformBufferObject(gl, this.#program.program, 'projectionView',
+                    ['projection', 'view'], 2);
+            this.#projectionView.setUniforms({projection});
             this.#terrains = await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
             const response = await fetch(url);
             if (!response.ok) {
@@ -81,11 +85,10 @@ class Garden {
                 + this.#getAltitude(Math.ceil(latitude), Math.ceil(longitude))) / 4;
     }
 
-    render(projection, view, model, light) {
+    render(view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#gl.uniformMatrix4fv(this.#program.uniforms.projection, false, projection); // TODO do not set all here
-        this.#gl.uniformMatrix4fv(this.#program.uniforms.view, false, view);
-        this.#gl.uniformMatrix4fv(this.#program.uniforms.model, false, model);
+        this.#projectionView.setUniforms({view});
+        // TODO
         this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
         this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
         this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));

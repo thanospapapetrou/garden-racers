@@ -58,7 +58,7 @@ class GardenRacers {
     constructor(gl, garden) {
         this.#gl = gl;
         return (async () => {
-            this.#garden = await new Garden(this.#gl, garden);
+            this.#garden = await new Garden(this.#gl, garden, this.#projection);
             this.#bug = await new Bug(this.#gl, this.#projection, this.#garden);
             this.azimuth = 0.0;
             this.elevation = 0.0;
@@ -152,7 +152,7 @@ class GardenRacers {
     render(time) {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
-        this.#garden.render(this.#projection, this.#view, this.#model, GardenRacers.#LIGHT);
+        this.#garden.render(this.#view, GardenRacers.#LIGHT);
         this.#bug.render(this.#view, GardenRacers.#LIGHT);
         requestAnimationFrame(this.render.bind(this));
     }
@@ -181,9 +181,5 @@ class GardenRacers {
                 this.#bug.y - 1 * Math.sin(this.#bug.yaw), this.#bug.z + 1.0),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
         return view;
-    }
-
-    get #model() { // TODO this is not required
-        return mat4.create();
     }
 }
