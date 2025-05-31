@@ -5,7 +5,7 @@ class UniformBufferObject {
     #ubo;
     #offsets;
 
-    constructor(gl, program, name, uniforms, index) {
+    constructor(gl, index, program, name, uniforms) {
         this.#gl = gl;
         this.#ubo = this.#gl.createBuffer();
         this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo);

@@ -17,6 +17,7 @@ class Garden {
     #gl;
     #program;
     #projectionView;
+    #light;
     #terrains;
     #garden;
     #positionLattice;
@@ -30,10 +31,14 @@ class Garden {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
                     Garden.#ATTRIBUTES);
-            this.#projectionView = new UniformBufferObject(gl, this.#program.program, 'projectionView',
-                    ['projection', 'view'], 2);
+            this.#projectionView = new UniformBufferObject(gl, 2, this.#program.program, 'projectionView',
+                    ['projection', 'view']);
             this.#projectionView.setUniforms({projection});
+            this.#light = new UniformBufferObject(gl, 3, this.#program.program, 'light', ['ambient',
+                'directional.direction', 'directional.color']);
             this.#terrains = await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
+            this.#gl.useProgram(this.#program.program);
+            this.#gl.uniform1i(this.#program.uniforms.terrains, Garden.#TEXTURE_TERRAINS);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(Shader.#ERROR_LOADING(url, response.status));
@@ -88,11 +93,9 @@ class Garden {
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
         this.#projectionView.setUniforms({view});
-        // TODO
-        this.#gl.uniform3fv(this.#program.uniforms['light.ambient'], new Float32Array(light.ambient));
-        this.#gl.uniform3fv(this.#program.uniforms['light.directional.color'], new Float32Array(light.directional.color));
-        this.#gl.uniform3fv(this.#program.uniforms['light.directional.direction'], new Float32Array(light.directional.direction));
-        this.#gl.uniform1i(this.#program.uniforms.terrains, this.#terrains.unit);
+        this.#light.setUniforms({ambient: new Float32Array(light.ambient),
+                'directional.direction': new Float32Array(light.directional.direction),
+                'directional.color': new Float32Array(light.directional.color)});
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);

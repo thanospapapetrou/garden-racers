@@ -7,12 +7,11 @@ struct Directional {
     vec3 direction;
 };
 
-struct Light {
+uniform light {
     vec3 ambient;
     Directional directional;
 };
 
-uniform Light light;
 uniform sampler2D terrains;
 
 in vec3 vertexNormal;
@@ -28,6 +27,6 @@ void main(void) {
         p += vertexTextureCoordinates[i].p;
     }
     fragmentColor.rgb /= p;
-    fragmentColor.rgb *= light.ambient + light.directional.color * max(dot(normalize(vertexNormal),
-            normalize(-light.directional.direction)), 0.0);
+    fragmentColor.rgb *= ambient + directional.color * max(dot(normalize(vertexNormal),
+            normalize(-directional.direction)), 0.0);
 }

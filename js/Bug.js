@@ -5,8 +5,6 @@ class Bug {
     static #ATTRIBUTES = ['position', 'normal'];
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
-    static #UNIFORMS = ['projection', 'view', 'model', 'light.ambient', 'light.directional.color',
-            'light.directional.direction'];
     static #VELOCITY = 1.0;
 
     #gl;
@@ -28,11 +26,11 @@ class Bug {
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
-            this.#projectionViewModel = new UniformBufferObject(gl, this.#program.program, 'projectionViewModel',
-                    ['projection', 'view', 'model'], 0);
+            this.#projectionViewModel = new UniformBufferObject(gl, 0, this.#program.program, 'projectionViewModel',
+                    ['projection', 'view', 'model']);
             this.#projectionViewModel.setUniforms({projection});
-            this.#light = new UniformBufferObject(gl, this.#program.program, 'light',
-                    ['ambient', 'directional.color', 'directional.direction'], 1);
+            this.#light = new UniformBufferObject(gl, 1, this.#program.program, 'light',
+                    ['ambient', 'directional.color', 'directional.direction']);
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
