@@ -23,13 +23,16 @@ class Bug {
     #velocity;
     #angularVelocity;
 
-    constructor(gl, garden) { // TODO improve camera, animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
+    constructor(gl, projection, garden) { // TODO improve camera, animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
         this.#gl = gl;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
             this.#ubo = new UniformBufferObject(gl, this.#program.program, 'vertexUniforms', 0,
                     ['projection', 'view', 'model']);
+            this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo.ubo);
+            this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.projection, projection, 0);
+            this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);
             this.#ubo2 = new UniformBufferObject(gl, this.#program.program, 'light', 1,
                     ['ambient', 'color', 'direction']);
 
@@ -88,9 +91,8 @@ class Bug {
         }
     }
 
-    render(projection, view, light) {
+    render(view, light) {
         this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, this.#ubo.ubo);
-        this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.projection, projection, 0);
         this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.view, view, 0);
         this.#gl.bufferSubData(this.#gl.UNIFORM_BUFFER, this.#ubo.offsets.model, this.#model, 0);
         this.#gl.bindBuffer(this.#gl.UNIFORM_BUFFER, null);

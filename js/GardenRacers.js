@@ -59,7 +59,7 @@ class GardenRacers {
         this.#gl = gl;
         return (async () => {
             this.#garden = await new Garden(this.#gl, garden);
-            this.#bug = await new Bug(this.#gl, this.#garden);
+            this.#bug = await new Bug(this.#gl, this.#projection, this.#garden);
             this.azimuth = 0.0;
             this.elevation = 0.0;
             this.distance = GardenRacers.#DISTANCE.max;
@@ -153,7 +153,7 @@ class GardenRacers {
         this.idle(time);
         this.#gl.clear(this.#gl.COLOR_BUFFER_BIT | this.#gl.DEPTH_BUFFER_BIT);
         this.#garden.render(this.#projection, this.#view, this.#model, GardenRacers.#LIGHT);
-        this.#bug.render(this.#projection, this.#view, GardenRacers.#LIGHT);
+        this.#bug.render(this.#view, GardenRacers.#LIGHT);
         requestAnimationFrame(this.render.bind(this));
     }
 
