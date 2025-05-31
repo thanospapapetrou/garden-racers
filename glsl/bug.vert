@@ -1,6 +1,6 @@
 #version 300 es
 
-uniform vertexUniforms {
+uniform projectionViewModel {
     mat4 projection;
     mat4 view;
     mat4 model;
