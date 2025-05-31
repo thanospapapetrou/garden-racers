@@ -1,9 +1,19 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
-            'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
-            'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
+    static #ATTRIBUTES = [
+        'position',
+        'normal',
+        'textureCoordinatesCenter',
+        'textureCoordinatesN',
+        'textureCoordinatesNE',
+        'textureCoordinatesE',
+        'textureCoordinatesSE',
+        'textureCoordinatesS',
+        'textureCoordinatesSW',
+        'textureCoordinatesW',
+        'textureCoordinatesNW'
+    ];
     static #ERROR_LOADING = (url, status) => `Error loading garden ${url}: HTTP status ${status}`;
     static #IMAGE_TERRAINS = './img/terrains.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
@@ -11,14 +21,29 @@ class Garden {
     static #STEP_LATTICE = 0.5;
     static #STEP_TEXTURE = 0.25;
     static #TEXTURE_TERRAINS = 0;
-    static #UNIFORMS = ['projection', 'view', 'model', 'light.ambient', 'light.directional.color',
-            'light.directional.direction', 'terrains'];
+    static #UBO_LIGHT = 'light';
+    static #UBO_PROJECTION_VIEW = 'projectionView';
+    static #UNIFORM_AMBIENT = 'ambient';
+    static #UNIFORM_DIRECTIONAL_DIRECTION = 'directional.direction';
+    static #UNIFORM_DIRECTIONAL_COLOR = 'directional.color';
+    static #UNIFORM_PROJECTION = 'projection';
+    static #UNIFORM_TERRAINS = 'terrains';
+    static #UNIFORM_VIEW = 'view';
+    static UBOS = {
+        [Garden.#UBO_PROJECTION_VIEW]: [
+            Garden.#UNIFORM_PROJECTION,
+            Garden.#UNIFORM_VIEW
+        ],
+        [Garden.#UBO_LIGHT]: [
+            Garden.#UNIFORM_AMBIENT,
+            Garden.#UNIFORM_DIRECTIONAL_DIRECTION,
+            Garden.#UNIFORM_DIRECTIONAL_COLOR
+        ]
+    };
 
     #gl;
     #program;
-    #projectionView;
-    #light;
-    #terrains;
+    #ubos;
     #garden;
     #positionLattice;
     #normalLattice;
@@ -29,16 +54,17 @@ class Garden {
         this.#gl = gl;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
-                    await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), Garden.#UNIFORMS,
+                    await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), [Garden.#UNIFORM_TERRAINS],
                     Garden.#ATTRIBUTES);
-            this.#projectionView = new UniformBufferObject(gl, 0, this.#program.program, 'projectionView',
-                    ['projection', 'view']);
-            this.#projectionView.setUniforms({projection});
-            this.#light = new UniformBufferObject(gl, 1, this.#program.program, 'light', ['ambient',
-                'directional.direction', 'directional.color']);
-            this.#terrains = await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
+            this.#ubos = {};
+            for (let i = 0; i < Object.keys(Garden.UBOS).length; i++) {
+                this.#ubos[Object.keys(Garden.UBOS)[i]] = new UniformBufferObject(gl, i, this.#program.program,
+                    Object.keys(Garden.UBOS)[i], Object.values(Garden.UBOS)[i]);
+            }
+            this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_PROJECTION]: projection});
+            await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
             this.#gl.useProgram(this.#program.program);
-            this.#gl.uniform1i(this.#program.uniforms.terrains, Garden.#TEXTURE_TERRAINS);
+            this.#gl.uniform1i(this.#program.uniforms[Garden.#UNIFORM_TERRAINS], Garden.#TEXTURE_TERRAINS);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(Shader.#ERROR_LOADING(url, response.status));
@@ -92,10 +118,10 @@ class Garden {
 
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#projectionView.setUniforms({view});
-        this.#light.setUniforms({ambient: new Float32Array(light.ambient),
-                'directional.direction': new Float32Array(light.directional.direction),
-                'directional.color': new Float32Array(light.directional.color)});
+        this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_VIEW]: view});
+        this.#ubos[Garden.#UBO_LIGHT].setUniforms({[Garden.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
+                [Garden.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction),
+                [Garden.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color)});
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
