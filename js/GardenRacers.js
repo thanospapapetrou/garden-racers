@@ -8,7 +8,7 @@ class GardenRacers {
     };
     static #DISTANCE = {
         min: 0.1, // 0.1 m
-        max: 20.0 // 20 m
+        max: 5.1 // 5.1 m
     };
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
     static #FORMAT_DISTANCE = (distance) => `${distance} m`;
@@ -23,17 +23,15 @@ class GardenRacers {
     static #PROJECTION = {
         fieldOfView: 1.57079632679, // π/2 rad
         z: {
-            near: 0.1, // 0.1 m
+            near: 0.01, // 0.01 m
             far: 180.312229203 // ~ 180 m; based on max garden diagonal
         }
     };
-    static #SELECTOR_AZIMUTH = 'span#azimuth';
     static #SELECTOR_CANVAS = 'canvas#gardenRacers';
     static #SELECTOR_DISTANCE = 'span#distance';
     static #SELECTOR_ELEVATION = 'span#elevation';
     static #SELECTOR_FPS = 'span#fps';
     static #VELOCITY = {
-        azimuth: 1.57079632679, // π/2 rad/s
         elevation: 1.57079632679, // π/2 rad/s
         distance: 5.0 // 5 m/s
     };
@@ -41,10 +39,8 @@ class GardenRacers {
     #gl;
     #garden;
     #bug;
-    #azimuth;
     #elevation;
     #distance;
-    #velocityAzimuth;
     #velocityElevation;
     #velocityDistance;
     #time;
@@ -60,10 +56,8 @@ class GardenRacers {
         return (async () => {
             this.#garden = await new Garden(this.#gl, garden, this.#projection);
             this.#bug = await new Bug(this.#gl, this.#projection, this.#garden);
-            this.azimuth = 0.0;
             this.elevation = 0.0;
-            this.distance = GardenRacers.#DISTANCE.max;
-            this.#velocityAzimuth = 0.0;
+            this.distance = GardenRacers.#DISTANCE.min;
             this.#velocityElevation = 0.0;
             this.#velocityDistance = 0.0;
             this.#time = 0;
@@ -80,27 +74,12 @@ class GardenRacers {
         })();
     }
 
-    get azimuth() {
-        return this.#azimuth;
-    }
-
-    set azimuth(azimuth) {
-        this.#azimuth = azimuth;
-        if (this.#azimuth < 0) {
-            this.#azimuth += 2 * Math.PI;
-        } else if (this.#azimuth >= 2 * Math.PI) {
-            this.#azimuth -= 2 * Math.PI;
-        }
-        document.querySelector(GardenRacers.#SELECTOR_AZIMUTH).firstChild.nodeValue =
-                GardenRacers.#FORMAT_ANGLE(this.#azimuth);
-    }
-
     get elevation() {
         return this.#elevation;
     }
 
     set elevation(elevation) {
-        this.#elevation = Math.min(Math.max(elevation, -Math.PI / 2), Math.PI / 2);
+        this.#elevation = Math.min(Math.max(elevation, 0), Math.PI / 2);
         document.querySelector(GardenRacers.#SELECTOR_ELEVATION).firstChild.nodeValue =
                 GardenRacers.#FORMAT_ANGLE(this.#elevation);
     }
@@ -119,29 +98,17 @@ class GardenRacers {
         document.querySelector(GardenRacers.#SELECTOR_FPS).firstChild.nodeValue = fps;
     }
 
-
     keyboard(event) {
-        this.#velocityAzimuth = 0.0;
         this.#velocityElevation = 0.0;
         this.#velocityDistance = 0.0;
         if (event.type == Event.KEY_DOWN) {
             switch (event.code) {
-            case KeyCode.A:
-                this.#velocityElevation = GardenRacers.#VELOCITY.elevation;
-                break;
-            case KeyCode.Z:
-                this.#velocityElevation = -GardenRacers.#VELOCITY.elevation;
-                break;
-            case KeyCode.Q:
-                this.#velocityAzimuth = GardenRacers.#VELOCITY.azimuth;
-                break;
-            case KeyCode.W:
-                this.#velocityAzimuth = -GardenRacers.#VELOCITY.azimuth;
-                break;
             case KeyCode.PAGE_UP:
+                this.#velocityElevation = GardenRacers.#VELOCITY.elevation;
                 this.#velocityDistance = GardenRacers.#VELOCITY.distance;
                 break;
             case KeyCode.PAGE_DOWN:
+                this.#velocityElevation = -GardenRacers.#VELOCITY.elevation;
                 this.#velocityDistance = -GardenRacers.#VELOCITY.distance;
                 break;
             }
@@ -161,7 +128,6 @@ class GardenRacers {
         const dt = (time - this.#time) / GardenRacers.#MS_PER_S;
         this.#time = time;
         this.fps = 1 / dt;
-        this.azimuth += this.#velocityAzimuth * dt;
         this.elevation += this.#velocityElevation * dt;
         this.distance += this.#velocityDistance * dt;
         this.#bug.idle(dt);
@@ -177,8 +143,10 @@ class GardenRacers {
 
     get #view() {
         const view = mat4.create();
-        mat4.lookAt(view, vec3.fromValues(this.#bug.x - 1 * Math.cos(this.#bug.yaw),
-                this.#bug.y - 1 * Math.sin(this.#bug.yaw), this.#bug.z + 1.0),
+        mat4.lookAt(view, vec3.fromValues(
+                this.#bug.x - this.#distance * Math.cos(this.#elevation) * Math.cos(this.#bug.yaw),
+                this.#bug.y - this.#distance * Math.cos(this.#elevation) * Math.sin(this.#bug.yaw),
+                this.#bug.z + this.#distance * Math.sin(this.#elevation)),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
         return view;
     }
