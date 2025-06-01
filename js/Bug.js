@@ -2,10 +2,7 @@
 
 class Bug {
     static #ANGULAR_VELOCITY = Math.PI; // rad/s
-    static #ATTRIBUTES = [
-        'position',
-        'normal'
-    ];
+    static #ATTRIBUTES = ['position', 'normal'];
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
     static #UBO_LIGHT = 'light';
@@ -17,18 +14,9 @@ class Bug {
     static #UNIFORM_PROJECTION = 'projection';
     static #UNIFORM_TERRAINS = 'terrains';
     static #UNIFORM_VIEW = 'view';
-    static UBOS = {
-        [Bug.#UBO_PROJECTION_VIEW_MODEL]: [
-            Bug.#UNIFORM_PROJECTION,
-            Bug.#UNIFORM_VIEW,
-            Bug.#UNIFORM_MODEL
-        ],
-        [Bug.#UBO_LIGHT]: [
-            Bug.#UNIFORM_AMBIENT,
-            Bug.#UNIFORM_DIRECTIONAL_COLOR,
-            Bug.#UNIFORM_DIRECTIONAL_DIRECTION
-        ]
-    };
+    static UBOS = {[Bug.#UBO_PROJECTION_VIEW_MODEL]: [Bug.#UNIFORM_PROJECTION, Bug.#UNIFORM_VIEW, Bug.#UNIFORM_MODEL],
+            [Bug.#UBO_LIGHT]: [Bug.#UNIFORM_AMBIENT, Bug.#UNIFORM_DIRECTIONAL_COLOR, Bug.#UNIFORM_DIRECTIONAL_DIRECTION]
+            };
     static #VELOCITY = 1.0;
 
     #gl;

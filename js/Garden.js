@@ -1,19 +1,9 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = [
-        'position',
-        'normal',
-        'textureCoordinatesCenter',
-        'textureCoordinatesN',
-        'textureCoordinatesNE',
-        'textureCoordinatesE',
-        'textureCoordinatesSE',
-        'textureCoordinatesS',
-        'textureCoordinatesSW',
-        'textureCoordinatesW',
-        'textureCoordinatesNW'
-    ];
+    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
+        'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
+        'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
     static #ERROR_LOADING = (url, status) => `Error loading garden ${url}: HTTP status ${status}`;
     static #IMAGE_TERRAINS = './img/terrains.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
@@ -29,17 +19,9 @@ class Garden {
     static #UNIFORM_PROJECTION = 'projection';
     static #UNIFORM_TERRAINS = 'terrains';
     static #UNIFORM_VIEW = 'view';
-    static UBOS = {
-        [Garden.#UBO_PROJECTION_VIEW]: [
-            Garden.#UNIFORM_PROJECTION,
-            Garden.#UNIFORM_VIEW
-        ],
-        [Garden.#UBO_LIGHT]: [
-            Garden.#UNIFORM_AMBIENT,
-            Garden.#UNIFORM_DIRECTIONAL_COLOR,
-            Garden.#UNIFORM_DIRECTIONAL_DIRECTION
-        ]
-    };
+    static UBOS = {[Garden.#UBO_PROJECTION_VIEW]: [Garden.#UNIFORM_PROJECTION, Garden.#UNIFORM_VIEW],
+            [Garden.#UBO_LIGHT]: [Garden.#UNIFORM_AMBIENT, Garden.#UNIFORM_DIRECTIONAL_COLOR,
+            Garden.#UNIFORM_DIRECTIONAL_DIRECTION]};
 
     #gl;
     #program;
