@@ -1,9 +1,17 @@
 'use strict';
 
 class Garden {
-    static #ATTRIBUTES = ['position', 'normal', 'textureCoordinatesCenter', 'textureCoordinatesN',
-        'textureCoordinatesNE', 'textureCoordinatesE', 'textureCoordinatesSE', 'textureCoordinatesS',
-        'textureCoordinatesSW', 'textureCoordinatesW', 'textureCoordinatesNW'];
+    static #ATTRIBUTE_NORMAL = 'normal';
+    static #ATTRIBUTE_POSITION = 'position';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_CENTER = 'textureCoordinatesCenter';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_E = 'textureCoordinatesE';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_N = 'textureCoordinatesN';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_NE = 'textureCoordinatesNE';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_NW = 'textureCoordinatesNW';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_S = 'textureCoordinatesS';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_SE = 'textureCoordinatesSE';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_SW = 'textureCoordinatesSW';
+    static #ATTRIBUTE_TEXTURE_COORDINATES_W = 'textureCoordinatesW';
     static #ERROR_LOADING = (url, status) => `Error loading garden ${url}: HTTP status ${status}`;
     static #IMAGE_TERRAINS = './img/terrains.png';
     static #SHADER_FRAGMENT = './glsl/garden.frag';
@@ -37,7 +45,11 @@ class Garden {
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Garden.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Garden.#SHADER_FRAGMENT), [Garden.#UNIFORM_TERRAINS],
-                    Garden.#ATTRIBUTES);
+                    [Garden.#ATTRIBUTE_POSITION, Garden.#ATTRIBUTE_NORMAL, Garden.#ATTRIBUTE_TEXTURE_COORDINATES_CENTER,
+                    Garden.#ATTRIBUTE_TEXTURE_COORDINATES_N, Garden.#ATTRIBUTE_TEXTURE_COORDINATES_NE,
+                    Garden.#ATTRIBUTE_TEXTURE_COORDINATES_E, Garden.#ATTRIBUTE_TEXTURE_COORDINATES_SE,
+                    Garden.#ATTRIBUTE_TEXTURE_COORDINATES_S, Garden.#ATTRIBUTE_TEXTURE_COORDINATES_SW,
+                    Garden.#ATTRIBUTE_TEXTURE_COORDINATES_W, Garden.#ATTRIBUTE_TEXTURE_COORDINATES_NW]);
             this.#ubos = {};
             for (let i = 0; i < Object.keys(Garden.UBOS).length; i++) {
                 this.#ubos[Object.keys(Garden.UBOS)[i]] = new UniformBufferObject(gl, i, this.#program.program,
@@ -58,30 +70,19 @@ class Garden {
             this.#garden = await response.json();
             this.#positionLattice = this.#calculatePositionLattice();
             this.#normalLattice = this.#calculateNormalLattice();
-            this.#vao = new VertexArrayObject(gl, [ // TODO improve
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#positions)),
-                    location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#normals)),
-                    location: this.#program.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(null))),
-                    location: this.#program.attributes.textureCoordinatesCenter, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.N))),
-                    location: this.#program.attributes.textureCoordinatesN, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NE))),
-                    location: this.#program.attributes.textureCoordinatesNE, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.E))),
-                    location: this.#program.attributes.textureCoordinatesE, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SE))),
-                    location: this.#program.attributes.textureCoordinatesSE, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.S))),
-                    location: this.#program.attributes.textureCoordinatesS, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.SW))),
-                    location: this.#program.attributes.textureCoordinatesSW, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.W))),
-                    location: this.#program.attributes.textureCoordinatesW, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(this.#getTextureCoordinates(Direction.NW))),
-                    location: this.#program.attributes.textureCoordinatesNW, size: Vector.COMPONENTS, type: gl.FLOAT}
-            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)));
+            this.#vao = new VertexArrayObject(gl, Object.entries({[Garden.#ATTRIBUTE_POSITION]: this.#positions,
+                    [Garden.#ATTRIBUTE_NORMAL]: this.#normals,
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_CENTER]: this.#getTextureCoordinates(null),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_N]: this.#getTextureCoordinates(Direction.N),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_NE]: this.#getTextureCoordinates(Direction.NE),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_E]: this.#getTextureCoordinates(Direction.E),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_SE]: this.#getTextureCoordinates(Direction.SE),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_S]: this.#getTextureCoordinates(Direction.S),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_SW]: this.#getTextureCoordinates(Direction.SW),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_W]: this.#getTextureCoordinates(Direction.W),
+                    [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_NW]: this.#getTextureCoordinates(Direction.NW)})
+                    .map(([attribute, data]) => this.#getVbo(attribute, data)),
+                    new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)));
             this.#count = this.#indices.length;
             return this;
         })();
@@ -111,6 +112,11 @@ class Garden {
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
+    }
+
+    #getVbo(attribute, data) {
+        return {vbo: new VertexBufferObject(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(data)),
+                location: this.#program.attributes[attribute], size: Vector.COMPONENTS, type: this.#gl.FLOAT};
     }
 
     get #positions() {
