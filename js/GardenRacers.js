@@ -7,8 +7,8 @@ class GardenRacers {
         depth: 1.0 // max
     };
     static #DISTANCE = {
-        min: 0.1, // 0.1 m
-        max: 5.1 // 5.1 m
+        min: 0.5, // 0.5 m
+        max: 5.5 // 5.5 m
     };
     static #FORMAT_ANGLE = (angle) => `${angle} rad (${angle * 180 / Math.PI} °)`;
     static #FORMAT_DISTANCE = (distance) => `${distance} m`;
@@ -147,7 +147,9 @@ class GardenRacers {
                 this.#bug.x - this.#distance * Math.cos(this.#elevation) * Math.cos(this.#bug.yaw),
                 this.#bug.y - this.#distance * Math.cos(this.#elevation) * Math.sin(this.#bug.yaw),
                 this.#bug.z + this.#distance * Math.sin(this.#elevation)),
-                vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z), vec3.fromValues(0.0, 0.0, 1.0));
+                vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z),
+                vec3.fromValues(Math.sin(this.#elevation) * Math.cos(this.#bug.yaw),
+                Math.sin(this.#elevation) * Math.sin(this.#bug.yaw), Math.cos(this.#elevation)));
         return view;
     }
 }
