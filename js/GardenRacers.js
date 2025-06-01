@@ -27,11 +27,13 @@ class GardenRacers {
             far: 180.312229203 // ~ 180 m; based on max garden diagonal
         }
     };
+    static #SELECTOR_AZIMUTH = 'span#azimuth';
     static #SELECTOR_CANVAS = 'canvas#gardenRacers';
     static #SELECTOR_DISTANCE = 'span#distance';
     static #SELECTOR_ELEVATION = 'span#elevation';
     static #SELECTOR_FPS = 'span#fps';
     static #VELOCITY = {
+        azimuth: 1.57079632679, // π/2 rad/s
         elevation: 1.57079632679, // π/2 rad/s
         distance: 5.0 // 5 m/s
     };
@@ -39,8 +41,10 @@ class GardenRacers {
     #gl;
     #garden;
     #bug;
+    #azimuth;
     #elevation;
     #distance;
+    #velocityAzimuth;
     #velocityElevation;
     #velocityDistance;
     #time;
@@ -56,8 +60,10 @@ class GardenRacers {
         return (async () => {
             this.#garden = await new Garden(this.#gl, garden, this.#projection);
             this.#bug = await new Bug(this.#gl, this.#projection, this.#garden);
+            this.#azimuth = 0.0;
             this.elevation = 0.0;
             this.distance = GardenRacers.#DISTANCE.min;
+            this.#velocityAzimuth = 0.0;
             this.#velocityElevation = 0.0;
             this.#velocityDistance = 0.0;
             this.#time = 0;
@@ -74,14 +80,24 @@ class GardenRacers {
         })();
     }
 
+    get azimuth() {
+        return this.#azimuth;
+    }
+
+    set azimuth(azimuth) {
+        this.#azimuth = Math.min(Math.max(azimuth, -Math.PI), Math.PI);
+        document.querySelector(GardenRacers.#SELECTOR_AZIMUTH).firstChild.nodeValue
+                = GardenRacers.#FORMAT_ANGLE(this.#azimuth);
+    }
+
     get elevation() {
         return this.#elevation;
     }
 
     set elevation(elevation) {
         this.#elevation = Math.min(Math.max(elevation, 0), Math.PI / 2);
-        document.querySelector(GardenRacers.#SELECTOR_ELEVATION).firstChild.nodeValue =
-                GardenRacers.#FORMAT_ANGLE(this.#elevation);
+        document.querySelector(GardenRacers.#SELECTOR_ELEVATION).firstChild.nodeValue
+                = GardenRacers.#FORMAT_ANGLE(this.#elevation);
     }
 
     get distance() {
@@ -99,6 +115,7 @@ class GardenRacers {
     }
 
     keyboard(event) {
+        this.#velocityAzimuth = 0.0;
         this.#velocityElevation = 0.0;
         this.#velocityDistance = 0.0;
         if (event.type == Event.KEY_DOWN) {
@@ -110,6 +127,15 @@ class GardenRacers {
             case KeyCode.PAGE_DOWN:
                 this.#velocityElevation = -GardenRacers.#VELOCITY.elevation;
                 this.#velocityDistance = -GardenRacers.#VELOCITY.distance;
+                break;
+            case KeyCode.A:
+                this.#velocityAzimuth = -GardenRacers.#VELOCITY.azimuth;
+                break;
+            case KeyCode.D:
+                this.#velocityAzimuth = GardenRacers.#VELOCITY.azimuth;
+                break;
+            case KeyCode.S:
+                this.#azimuth = 0.0;
                 break;
             }
         }
@@ -128,6 +154,7 @@ class GardenRacers {
         const dt = (time - this.#time) / GardenRacers.#MS_PER_S;
         this.#time = time;
         this.fps = 1 / dt;
+        this.azimuth += this.#velocityAzimuth * dt;
         this.elevation += this.#velocityElevation * dt;
         this.distance += this.#velocityDistance * dt;
         this.#bug.idle(dt);
@@ -144,8 +171,8 @@ class GardenRacers {
     get #view() {
         const view = mat4.create();
         mat4.lookAt(view, vec3.fromValues(
-                this.#bug.x - this.#distance * Math.cos(this.#elevation) * Math.cos(this.#bug.yaw),
-                this.#bug.y - this.#distance * Math.cos(this.#elevation) * Math.sin(this.#bug.yaw),
+                this.#bug.x - this.#distance * Math.cos(this.#elevation) * Math.cos(this.#bug.yaw + this.#azimuth),
+                this.#bug.y - this.#distance * Math.cos(this.#elevation) * Math.sin(this.#bug.yaw + this.#azimuth),
                 this.#bug.z + this.#distance * Math.sin(this.#elevation)),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z),
                 vec3.fromValues(Math.sin(this.#elevation) * Math.cos(this.#bug.yaw),
