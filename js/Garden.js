@@ -81,7 +81,7 @@ class Garden {
                     [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_SW]: this.#getTextureCoordinates(Direction.SW),
                     [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_W]: this.#getTextureCoordinates(Direction.W),
                     [Garden.#ATTRIBUTE_TEXTURE_COORDINATES_NW]: this.#getTextureCoordinates(Direction.NW)})
-                    .map(([attribute, data]) => this.#getVbo(attribute, data)),
+                    .map(([attribute, data]) => this.#getFloatVbo(attribute, data)),
                     new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.#indices)));
             this.#count = this.#indices.length;
             return this;
@@ -114,7 +114,7 @@ class Garden {
         this.#gl.bindVertexArray(null);
     }
 
-    #getVbo(attribute, data) {
+    #getFloatVbo(attribute, data) {
         return {vbo: new VertexBufferObject(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(data)),
                 location: this.#program.attributes[attribute], size: Vector.COMPONENTS, type: this.#gl.FLOAT};
     }

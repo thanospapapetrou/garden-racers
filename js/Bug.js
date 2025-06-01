@@ -2,7 +2,8 @@
 
 class Bug {
     static #ANGULAR_VELOCITY = Math.PI; // rad/s
-    static #ATTRIBUTES = ['position', 'normal'];
+    static #ATTRIBUTE_NORMAL = 'normal';
+    static #ATTRIBUTE_POSITION = 'position';
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
     static #UBO_LIGHT = 'light';
@@ -36,7 +37,8 @@ class Bug {
         this.#gl = gl;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
-                    await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
+                    await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], [Bug.#ATTRIBUTE_POSITION,
+                    Bug.#ATTRIBUTE_NORMAL]);
             this.#ubos = {};
             for (let i = 0; i < Object.keys(Bug.UBOS).length; i++) {
                 this.#ubos[Object.keys(Bug.UBOS)[i]] = new UniformBufferObject(gl, i + Object.keys(Garden.UBOS).length,
@@ -44,12 +46,10 @@ class Bug {
             }
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_PROJECTION]: projection});
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
-            this.#vao = new VertexArrayObject(gl, [ // TODO improve
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
-                    location: this.#program.attributes.position, size: Vector.COMPONENTS, type: gl.FLOAT},
-                {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.normals)),
-                    location: this.#program.attributes.normal, size: Vector.COMPONENTS, type: gl.FLOAT}
-            ], new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices)));
+            this.#vao = new VertexArrayObject(gl, Object.entries({[Bug.#ATTRIBUTE_POSITION]: bug.positions,
+                    [Bug.#ATTRIBUTE_NORMAL]: bug.normals})
+                    .map(([attribute, data]) => this.#getFloatVbo(attribute, data)),
+                    new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bug.indices)));
             this.#count = bug.indices.length;
             this.#garden = garden;
             this.#x = 0.0;
@@ -120,6 +120,11 @@ class Bug {
         } else if (this.#yaw >= 2 * Math.PI) {
             this.#yaw -= 2 * Math.PI;
         }
+    }
+
+    #getFloatVbo(attribute, data) {
+        return {vbo: new VertexBufferObject(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(data)),
+                location: this.#program.attributes[attribute], size: Vector.COMPONENTS, type: this.#gl.FLOAT};
     }
 
     get #model() {
