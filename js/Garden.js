@@ -36,8 +36,8 @@ class Garden {
         ],
         [Garden.#UBO_LIGHT]: [
             Garden.#UNIFORM_AMBIENT,
-            Garden.#UNIFORM_DIRECTIONAL_DIRECTION,
-            Garden.#UNIFORM_DIRECTIONAL_COLOR
+            Garden.#UNIFORM_DIRECTIONAL_COLOR,
+            Garden.#UNIFORM_DIRECTIONAL_DIRECTION
         ]
     };
 
@@ -62,6 +62,8 @@ class Garden {
                     Object.keys(Garden.UBOS)[i], Object.values(Garden.UBOS)[i]);
             }
             this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_PROJECTION]: projection});
+            // TODO textures in loop for multiple textures
+            // TODO reuse ubos for light across programs
             await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
             this.#gl.useProgram(this.#program.program);
             this.#gl.uniform1i(this.#program.uniforms[Garden.#UNIFORM_TERRAINS], Garden.#TEXTURE_TERRAINS);
@@ -120,8 +122,8 @@ class Garden {
         this.#gl.useProgram(this.#program.program);
         this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_VIEW]: view});
         this.#ubos[Garden.#UBO_LIGHT].setUniforms({[Garden.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
-                [Garden.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction),
-                [Garden.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color)});
+                [Garden.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
+                [Garden.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);

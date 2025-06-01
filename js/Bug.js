@@ -2,15 +2,38 @@
 
 class Bug {
     static #ANGULAR_VELOCITY = Math.PI; // rad/s
-    static #ATTRIBUTES = ['position', 'normal'];
+    static #ATTRIBUTES = [
+        'position',
+        'normal'
+    ];
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
+    static #UBO_LIGHT = 'light';
+    static #UBO_PROJECTION_VIEW_MODEL = 'projectionViewModel';
+    static #UNIFORM_AMBIENT = 'ambient';
+    static #UNIFORM_DIRECTIONAL_COLOR = 'directional.color';
+    static #UNIFORM_DIRECTIONAL_DIRECTION = 'directional.direction';
+    static #UNIFORM_MODEL = 'model';
+    static #UNIFORM_PROJECTION = 'projection';
+    static #UNIFORM_TERRAINS = 'terrains';
+    static #UNIFORM_VIEW = 'view';
+    static UBOS = {
+        [Bug.#UBO_PROJECTION_VIEW_MODEL]: [
+            Bug.#UNIFORM_PROJECTION,
+            Bug.#UNIFORM_VIEW,
+            Bug.#UNIFORM_MODEL
+        ],
+        [Bug.#UBO_LIGHT]: [
+            Bug.#UNIFORM_AMBIENT,
+            Bug.#UNIFORM_DIRECTIONAL_COLOR,
+            Bug.#UNIFORM_DIRECTIONAL_DIRECTION
+        ]
+    };
     static #VELOCITY = 1.0;
 
     #gl;
     #program;
-    #projectionViewModel;
-    #light;
+    #ubos;
     #vao;
     #count;
     #garden;
@@ -26,11 +49,12 @@ class Bug {
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
                     await new Shader(gl, gl.FRAGMENT_SHADER, Bug.#SHADER_FRAGMENT), [], Bug.#ATTRIBUTES);
-            this.#projectionViewModel = new UniformBufferObject(gl, 2, this.#program.program, 'projectionViewModel',
-                    ['projection', 'view', 'model']);
-            this.#projectionViewModel.setUniforms({projection});
-            this.#light = new UniformBufferObject(gl, 3, this.#program.program, 'light',
-                    ['ambient', 'directional.color', 'directional.direction']);
+            this.#ubos = {};
+            for (let i = 0; i < Object.keys(Bug.UBOS).length; i++) {
+                this.#ubos[Object.keys(Bug.UBOS)[i]] = new UniformBufferObject(gl, i + Object.keys(Garden.UBOS).length,
+                        this.#program.program, Object.keys(Bug.UBOS)[i], Object.values(Bug.UBOS)[i]);
+            }
+            this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_PROJECTION]: projection});
             const bug = new Ellipsoid(0.075, 0.05, 0.05, 16, 8); // TODO
             this.#vao = new VertexArrayObject(gl, [ // TODO improve
                 {vbo: new VertexBufferObject(gl, gl.ARRAY_BUFFER, new Float32Array(bug.positions)),
@@ -88,10 +112,11 @@ class Bug {
 
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#projectionViewModel.setUniforms({view: view, model: this.#model});
-        this.#light.setUniforms({ambient: new Float32Array(light.ambient),
-            'directional.color': new Float32Array(light.directional.color),
-            'directional.direction': new Float32Array(light.directional.direction)});
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view,
+                [Bug.#UNIFORM_MODEL]: this.#model});
+        this.#ubos[Bug.#UBO_LIGHT].setUniforms({[Bug.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
+            [Bug.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
+            [Bug.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
         this.#gl.bindVertexArray(this.#vao.vao);
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(null);
