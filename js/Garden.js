@@ -10,7 +10,6 @@ class Garden {
     static #SHADER_VERTEX = './glsl/garden.vert';
     static #STEP_LATTICE = 0.5;
     static #STEP_TEXTURE = 0.25;
-    static #TEXTURE_TERRAINS = 0;
     static #UBO_LIGHT = 'light';
     static #UBO_PROJECTION_VIEW = 'projectionView';
     static #UNIFORM_AMBIENT = 'ambient';
@@ -19,6 +18,7 @@ class Garden {
     static #UNIFORM_PROJECTION = 'projection';
     static #UNIFORM_TERRAINS = 'terrains';
     static #UNIFORM_VIEW = 'view';
+    static TEXTURES = [Garden.#IMAGE_TERRAINS];
     static UBOS = {[Garden.#UBO_PROJECTION_VIEW]: [Garden.#UNIFORM_PROJECTION, Garden.#UNIFORM_VIEW],
             [Garden.#UBO_LIGHT]: [Garden.#UNIFORM_AMBIENT, Garden.#UNIFORM_DIRECTIONAL_COLOR,
             Garden.#UNIFORM_DIRECTIONAL_DIRECTION]};
@@ -44,11 +44,13 @@ class Garden {
                     Object.keys(Garden.UBOS)[i], Object.values(Garden.UBOS)[i]);
             }
             this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_PROJECTION]: projection});
-            // TODO textures in loop for multiple textures
             // TODO reuse ubos for light across programs
-            await new Texture(gl, Garden.#TEXTURE_TERRAINS, Garden.#IMAGE_TERRAINS);
+            const textures = {};
+            for (let i = 0; i < Garden.TEXTURES.length; i++) {
+                textures[Garden.TEXTURES[i]] = await new Texture(gl, i, Garden.TEXTURES[i]);
+            }
             this.#gl.useProgram(this.#program.program);
-            this.#gl.uniform1i(this.#program.uniforms[Garden.#UNIFORM_TERRAINS], Garden.#TEXTURE_TERRAINS);
+            this.#gl.uniform1i(this.#program.uniforms[Garden.#UNIFORM_TERRAINS], textures[Garden.#IMAGE_TERRAINS].unit);
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(Shader.#ERROR_LOADING(url, response.status));
