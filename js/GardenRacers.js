@@ -175,8 +175,8 @@ class GardenRacers {
                 this.#bug.y - this.#distance * Math.cos(this.#elevation) * Math.sin(this.#bug.yaw + this.#azimuth),
                 this.#bug.z + this.#distance * Math.sin(this.#elevation)),
                 vec3.fromValues(this.#bug.x, this.#bug.y, this.#bug.z),
-                vec3.fromValues(Math.sin(this.#elevation) * Math.cos(this.#bug.yaw),
-                Math.sin(this.#elevation) * Math.sin(this.#bug.yaw), Math.cos(this.#elevation)));
+                vec3.fromValues(Math.sin(this.#elevation) * Math.cos(this.#bug.yaw + this.#azimuth),
+                Math.sin(this.#elevation) * Math.sin(this.#bug.yaw + this.#azimuth), Math.cos(this.#elevation)));
         return view;
     }
 }
