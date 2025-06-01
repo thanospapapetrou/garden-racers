@@ -156,13 +156,17 @@ class Bug {
 
     get #headModel() {
         const model = this.#model;
-        mat4.translate(model, model, [0.2, 0.0, 0.0]);
+        mat4.translate(model, model, [0.1, 0.0, 0.0]);
+        mat4.rotateY(model, model, Math.PI / 6);
+        mat4.translate(model, model, [0.1, 0.0, 0.0]);
         return model;
     }
 
     get #abdomenModel() {
         const model = this.#model;
-        mat4.translate(model, model, [-0.3, 0.0, 0.0]);
+        mat4.translate(model, model, [-0.1, 0.0, 0.0]);
+        mat4.rotateY(model, model, -Math.PI / 6);
+        mat4.translate(model, model, [-0.2, 0.0, 0.0]);
         return model;
     }
 }
