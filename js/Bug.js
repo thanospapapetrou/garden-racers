@@ -26,6 +26,7 @@ class Bug {
     #thorax;
     #head;
     #abdomen;
+    #femur;
     #garden;
     #x;
     #y;
@@ -47,24 +48,10 @@ class Bug {
                         this.#program.program, Object.keys(Bug.UBOS)[i], Object.values(Bug.UBOS)[i]);
             }
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_PROJECTION]: projection});
-            const thorax = new Ellipsoid(0.1, 0.05, 0.05, 16, 8); // TODO
-            this.#thorax = {vao: new VertexArrayObject(gl, Object.entries({[Bug.#ATTRIBUTE_POSITION]: thorax.positions,
-                    [Bug.#ATTRIBUTE_NORMAL]: thorax.normals})
-                    .map(([attribute, data]) => this.#getFloatVbo(attribute, data)),
-                    new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(thorax.indices))),
-                    count: thorax.indices.length};
-            const head = new Ellipsoid(0.1, 0.1, 0.1, 16, 8);
-            this.#head = {vao: new VertexArrayObject(gl, Object.entries({[Bug.#ATTRIBUTE_POSITION]: head.positions,
-                    [Bug.#ATTRIBUTE_NORMAL]: head.normals})
-                    .map(([attribute, data]) => this.#getFloatVbo(attribute, data)),
-                    new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(head.indices))),
-                    count: head.indices.length};
-            const abdomen = new Ellipsoid(0.2, 0.1, 0.1, 16, 8);
-            this.#abdomen = {vao: new VertexArrayObject(gl, Object.entries({
-                    [Bug.#ATTRIBUTE_POSITION]: abdomen.positions, [Bug.#ATTRIBUTE_NORMAL]: abdomen.normals})
-                    .map(([attribute, data]) => this.#getFloatVbo(attribute, data)),
-                    new VertexBufferObject(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(abdomen.indices))),
-                    count: abdomen.indices.length};
+            this.#thorax = this.#getVao(new Ellipsoid(0.1, 0.05, 0.05, 16, 8)); // TODO
+            this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 16, 8)); // TODO
+            this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 16, 8)); // TODO
+            this.#femur = this.#getVao(new RoundedCylinder(0.5, 1.0, 8, 4)); // TODO
             this.#garden = garden;
             this.#x = 0.0;
             this.#y = 0.0;
@@ -114,20 +101,23 @@ class Bug {
 
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view,
-                [Bug.#UNIFORM_MODEL]: this.#model});
         this.#ubos[Bug.#UBO_LIGHT].setUniforms({[Bug.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
             [Bug.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
             [Bug.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
-        this.#gl.bindVertexArray(this.#thorax.vao.vao);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#thorax.count, this.#gl.UNSIGNED_INT, 0);
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
-        this.#gl.bindVertexArray(this.#head.vao.vao);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#head.count, this.#gl.UNSIGNED_INT, 0);
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
-        this.#gl.bindVertexArray(this.#abdomen.vao.vao);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
-        this.#gl.bindVertexArray(null);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view,
+                [Bug.#UNIFORM_MODEL]: this.#model});
+        this.#gl.bindVertexArray(this.#femur.vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
+
+//        this.#gl.bindVertexArray(this.#thorax.vao.vao);
+//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#thorax.count, this.#gl.UNSIGNED_INT, 0);
+//        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
+//        this.#gl.bindVertexArray(this.#head.vao.vao);
+//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#head.count, this.#gl.UNSIGNED_INT, 0);
+//        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
+//        this.#gl.bindVertexArray(this.#abdomen.vao.vao);
+//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
+//        this.#gl.bindVertexArray(null);
     }
 
     idle(dt) {
@@ -142,7 +132,15 @@ class Bug {
         }
     }
 
-    #getFloatVbo(attribute, data) {
+    #getVao(object) {
+        return {vao: new VertexArrayObject(this.#gl, [
+                this.#getVbo(Bug.#ATTRIBUTE_POSITION, object.positions),
+                this.#getVbo(Bug.#ATTRIBUTE_NORMAL, object.normals)],
+                new VertexBufferObject(this.#gl, this.#gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(object.indices))),
+                count: object.indices.length};
+    }
+
+    #getVbo(attribute, data) {
         return {vbo: new VertexBufferObject(this.#gl, this.#gl.ARRAY_BUFFER, new Float32Array(data)),
                 location: this.#program.attributes[attribute], size: Vector.COMPONENTS, type: this.#gl.FLOAT};
     }

@@ -17,14 +17,11 @@ class Ellipsoid {
 
     get positions() {
         const positions = [0.0, 0.0, this.#c];
-        for (let i = 1; i < this.#stacks; i++) {
-            const theta = i * Math.PI / this.#stacks;
-            for (let j = 0; j < this.#sectors; j++) {
-                const phi = j * 2 * Math.PI / this.#sectors;
-                const x = this.#a * Math.sin(theta) * Math.cos(phi);
-                const y = this.#b * Math.sin(theta) * Math.sin(phi);
-                const z = this.#c * Math.cos(theta);
-                positions.push(x, y, z);
+        for (let i = Math.PI / this.#stacks; i < Math.PI; i += Math.PI / this.#stacks) {
+            for (let j = 0; j < 2 * Math.PI; j += 2 * Math.PI / this.#sectors) {
+                positions.push(this.#a * Math.sin(i) * Math.cos(j),
+                        this.#b * Math.sin(i) * Math.sin(j),
+                        this.#c * Math.cos(i));
             }
         }
         positions.push(0.0, 0.0, -this.#c);
@@ -33,14 +30,11 @@ class Ellipsoid {
 
     get normals() {
         const normals = [0.0, 0.0, 1.0];
-        for (let i = 1; i < this.#stacks; i++) {
-            const theta = i * Math.PI / this.#stacks;
-            for (let j = 0; j < this.#sectors; j++) {
-                const phi = j * 2 * Math.PI / this.#sectors;
-                const x = Math.sin(theta) * Math.cos(phi);
-                const y = Math.sin(theta) * Math.sin(phi);
-                const z = Math.cos(theta);
-                normals.push(x, y, z);
+        for (let i = Math.PI / this.#stacks; i < Math.PI; i += Math.PI / this.#stacks) {
+            for (let j = 0; j < 2 * Math.PI; j += 2 * Math.PI / this.#sectors) {
+                normals.push(Math.sin(i) * Math.cos(j),
+                        Math.sin(i) * Math.sin(j),
+                        Math.cos(i));
             }
         }
         normals.push(0.0, 0.0, -1.0);
@@ -54,7 +48,8 @@ class Ellipsoid {
         }
         for (let i = 0; i < this.#stacks - 2; i++) {
             for (let j = 0; j < this.#sectors; j++) {
-                indices.push(i * this.#sectors + j + 1, (i + 1) * this.#sectors + j + 1,
+                indices.push(i * this.#sectors + j + 1,
+                        (i + 1) * this.#sectors + j + 1,
                         (i + 1) * this.#sectors + (j + 1) % this.#sectors + 1);
                 indices.push((i + 1) * this.#sectors + (j + 1) % this.#sectors + 1,
                         i * this.#sectors + (j + 1) % this.#sectors + 1,
@@ -62,7 +57,8 @@ class Ellipsoid {
             }
         }
         for (let i = 0; i < this.#sectors; i++) {
-            indices.push((this.#stacks - 2) * this.#sectors + i + 1, (this.#stacks - 1) * this.#sectors + 1,
+            indices.push((this.#stacks - 2) * this.#sectors + i + 1,
+                    (this.#stacks - 1) * this.#sectors + 1,
                     (this.#stacks - 2) * this.#sectors + (i + 1) % this.#sectors + 1);
         }
         return indices;
