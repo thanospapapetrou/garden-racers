@@ -48,10 +48,10 @@ class Bug {
                         this.#program.program, Object.keys(Bug.UBOS)[i], Object.values(Bug.UBOS)[i]);
             }
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_PROJECTION]: projection});
-            this.#thorax = this.#getVao(new Ellipsoid(0.1, 0.05, 0.05, 16, 8)); // TODO
-            this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 16, 8)); // TODO
-            this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 16, 8)); // TODO
-            this.#femur = this.#getVao(new RoundedCylinder(0.005, 0.5, 8, 4)); // TODO
+            this.#thorax = this.#getVao(new Ellipsoid(0.1, 0.05, 0.05, 8, 4)); // TODO
+            this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 8, 4)); // TODO
+            this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 8, 4)); // TODO
+            this.#femur = this.#getVao(new RoundedCylinder(0.01, 0.25, 4, 2)); // TODO
             this.#garden = garden;
             this.#x = 0.0;
             this.#y = 0.0;
@@ -106,18 +106,20 @@ class Bug {
             [Bug.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
         this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view,
                 [Bug.#UNIFORM_MODEL]: this.#model});
+        this.#gl.bindVertexArray(this.#thorax.vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#thorax.count, this.#gl.UNSIGNED_INT, 0);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
+        this.#gl.bindVertexArray(this.#head.vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#head.count, this.#gl.UNSIGNED_INT, 0);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
+        this.#gl.bindVertexArray(this.#abdomen.vao.vao);
+        this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(this.#femur.vao.vao);
-        this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
-
-//        this.#gl.bindVertexArray(this.#thorax.vao.vao);
-//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#thorax.count, this.#gl.UNSIGNED_INT, 0);
-//        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
-//        this.#gl.bindVertexArray(this.#head.vao.vao);
-//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#head.count, this.#gl.UNSIGNED_INT, 0);
-//        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
-//        this.#gl.bindVertexArray(this.#abdomen.vao.vao);
-//        this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
-//        this.#gl.bindVertexArray(null);
+        for (let i = 0; i < 6; i ++) { // TODO
+            this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getFemurModel(i)});
+            this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
+        }
+        this.#gl.bindVertexArray(null);
     }
 
     idle(dt) {
@@ -165,6 +167,13 @@ class Bug {
         mat4.translate(model, model, [-0.1, 0.0, 0.0]);
         mat4.rotateY(model, model, -Math.PI / 6);
         mat4.translate(model, model, [-0.2, 0.0, 0.0]);
+        return model;
+    }
+
+    #getFemurModel(i) {
+        const model = this.#model;
+        mat4.rotateX(model, model, Math.PI / 2);
+        mat4.rotateY(model, model, i * Math.PI / 3);
         return model;
     }
 }
