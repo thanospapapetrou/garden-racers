@@ -51,7 +51,7 @@ class Bug {
             this.#thorax = this.#getVao(new Ellipsoid(0.1, 0.05, 0.05, 16, 8)); // TODO
             this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 16, 8)); // TODO
             this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 16, 8)); // TODO
-            this.#femur = this.#getVao(new RoundedCylinder(0.5, 1.0, 8, 4)); // TODO
+            this.#femur = this.#getVao(new RoundedCylinder(0.005, 0.5, 8, 4)); // TODO
             this.#garden = garden;
             this.#x = 0.0;
             this.#y = 0.0;
