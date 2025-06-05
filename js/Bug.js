@@ -27,6 +27,7 @@ class Bug {
     #head;
     #abdomen;
     #femur;
+    #tibia;
     #garden;
     #x;
     #y;
@@ -52,6 +53,7 @@ class Bug {
             this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 8, 4)); // TODO
             this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 8, 4)); // TODO
             this.#femur = this.#getVao(new RoundedCylinder(0.01, 0.25, 4, 2)); // TODO
+            this.#tibia = this.#getVao(new RoundedCylinder(0.01, 0.25, 4, 2)); // TODO
             this.#garden = garden;
             this.#x = 0.0;
             this.#y = 0.0;
@@ -104,20 +106,25 @@ class Bug {
         this.#ubos[Bug.#UBO_LIGHT].setUniforms({[Bug.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
             [Bug.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
             [Bug.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view,
-                [Bug.#UNIFORM_MODEL]: this.#model});
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view});
         this.#gl.bindVertexArray(this.#thorax.vao.vao);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#thoraxModel});
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#thorax.count, this.#gl.UNSIGNED_INT, 0);
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
         this.#gl.bindVertexArray(this.#head.vao.vao);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#headModel});
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#head.count, this.#gl.UNSIGNED_INT, 0);
-        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
         this.#gl.bindVertexArray(this.#abdomen.vao.vao);
+        this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(this.#femur.vao.vao);
         for (let i = 0; i < 6; i ++) { // TODO
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getFemurModel(i)});
             this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
+        }
+        this.#gl.bindVertexArray(this.#tibia.vao.vao);
+        for (let i = 0; i < 6; i ++) { // TODO
+            this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getTibiaModel(i)});
+            this.#gl.drawElements(this.#gl.TRIANGLES, this.#tibia.count, this.#gl.UNSIGNED_INT, 0);
         }
         this.#gl.bindVertexArray(null);
     }
@@ -149,31 +156,44 @@ class Bug {
 
     get #model() {
         const model = mat4.create();
-        mat4.translate(model, model, [this.#x, this.#y, this.#z + 0.2]);
+        mat4.translate(model, model, [this.#x, this.#y, this.#z]);
         mat4.rotateZ(model, model, this.#yaw);
         return model;
     }
 
-    get #headModel() {
+    get #thoraxModel() {
         const model = this.#model;
+        mat4.translate(model, model, [0.0, 0.0, 0.25]);
+        return model;
+    }
+
+    get #headModel() {
+        const model = this.#thoraxModel;
         mat4.translate(model, model, [0.1, 0.0, 0.0]);
-        mat4.rotateY(model, model, Math.PI / 6);
+        mat4.rotateY(model, model, Math.PI / 12);
         mat4.translate(model, model, [0.1, 0.0, 0.0]);
         return model;
     }
 
     get #abdomenModel() {
-        const model = this.#model;
+        const model = this.#thoraxModel;
         mat4.translate(model, model, [-0.1, 0.0, 0.0]);
-        mat4.rotateY(model, model, -Math.PI / 6);
+        mat4.rotateY(model, model, -Math.PI / 12);
         mat4.translate(model, model, [-0.2, 0.0, 0.0]);
         return model;
     }
 
     #getFemurModel(i) {
-        const model = this.#model;
+        const model = this.#thoraxModel;
+        mat4.rotateZ(model, model, i * Math.PI / 3);
+        mat4.rotateX(model, model, Math.PI / 2 - Math.PI / 12);
+        return model;
+    }
+
+    #getTibiaModel(i) {
+        const model = this.#getFemurModel(i);
+        mat4.translate(model, model, [0.0, 0.01, 0.25 - 0.01]);
         mat4.rotateX(model, model, Math.PI / 2);
-        mat4.rotateY(model, model, i * Math.PI / 3);
         return model;
     }
 }
