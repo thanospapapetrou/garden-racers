@@ -2,6 +2,15 @@
 
 class Bug {
     static #ANGULAR_VELOCITY = Math.PI; // rad/s
+    static #ANT = {
+        thorax: {x: 0.1, y: 0.05, z: 0.05, sectors: 8, stacks: 4},
+        head: {x: 0.075, y: 0.1, z: 0.075, sectors: 8, stacks: 4, angle: Math.PI / 12},
+        abdomen: {x: 0.15, y: 0.1, z: 0.1, sectors: 8, stacks: 4, angle: -Math.PI / 12},
+        femur: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: 7 * Math.PI / 12,
+                angles: [Math.PI / 4, 3 * Math.PI / 4, 0, Math.PI, -Math.PI / 4, 5 * Math.PI / 4]},
+        tibia: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: Math.PI / 6},
+        height: 0.15
+    };
     static #ATTRIBUTE_NORMAL = 'normal';
     static #ATTRIBUTE_POSITION = 'position';
     static #SHADER_FRAGMENT = './glsl/bug.frag';
@@ -37,7 +46,7 @@ class Bug {
     #angularVelocity;
 
     constructor(gl, projection, garden) { // TODO animate, improve movement smoothness, do not move over water, mouse controls, start and finish in map, more bugs, sound
-        // TODO femur, tibia, antenna
+        // TODO antennae, mandibles
         this.#gl = gl;
         return (async () => {
             this.#program = new Program(gl, await new Shader(gl, gl.VERTEX_SHADER, Bug.#SHADER_VERTEX),
@@ -49,11 +58,16 @@ class Bug {
                         this.#program.program, Object.keys(Bug.UBOS)[i], Object.values(Bug.UBOS)[i]);
             }
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_PROJECTION]: projection});
-            this.#thorax = this.#getVao(new Ellipsoid(0.1, 0.05, 0.05, 8, 4)); // TODO
-            this.#head = this.#getVao(new Ellipsoid(0.1, 0.1, 0.1, 8, 4)); // TODO
-            this.#abdomen = this.#getVao(new Ellipsoid(0.2, 0.1, 0.1, 8, 4)); // TODO
-            this.#femur = this.#getVao(new RoundedCylinder(0.01, 0.25, 4, 2)); // TODO
-            this.#tibia = this.#getVao(new RoundedCylinder(0.01, 0.25, 4, 2)); // TODO
+            this.#thorax = this.#getVao(new Ellipsoid(Bug.#ANT.thorax.x, Bug.#ANT.thorax.y, Bug.#ANT.thorax.z,
+                    Bug.#ANT.thorax.sectors, Bug.#ANT.thorax.stacks));
+            this.#head = this.#getVao(new Ellipsoid(Bug.#ANT.head.x, Bug.#ANT.head.y, Bug.#ANT.head.z,
+                    Bug.#ANT.head.sectors, Bug.#ANT.head.stacks));
+            this.#abdomen = this.#getVao(new Ellipsoid(Bug.#ANT.abdomen.x, Bug.#ANT.abdomen.y, Bug.#ANT.abdomen.z,
+                Bug.#ANT.abdomen.sectors, Bug.#ANT.abdomen.stacks));
+            this.#femur = this.#getVao(new RoundedCylinder(Bug.#ANT.femur.radius, Bug.#ANT.femur.height,
+                    Bug.#ANT.femur.sectors, Bug.#ANT.femur.stacks));
+            this.#tibia = this.#getVao(new RoundedCylinder(Bug.#ANT.tibia.radius, Bug.#ANT.tibia.height,
+                    Bug.#ANT.tibia.sectors, Bug.#ANT.tibia.stacks));
             this.#garden = garden;
             this.#x = 0.0;
             this.#y = 0.0;
@@ -117,12 +131,12 @@ class Bug {
         this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(this.#femur.vao.vao);
-        for (let i = 0; i < 6; i ++) { // TODO
+        for (let i = 0; i < Bug.#ANT.femur.angles.length; i ++) { // TODO
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getFemurModel(i)});
             this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
         }
         this.#gl.bindVertexArray(this.#tibia.vao.vao);
-        for (let i = 0; i < 6; i ++) { // TODO
+        for (let i = 0; i < Bug.#ANT.femur.angles.length; i ++) { // TODO
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getTibiaModel(i)});
             this.#gl.drawElements(this.#gl.TRIANGLES, this.#tibia.count, this.#gl.UNSIGNED_INT, 0);
         }
@@ -163,37 +177,37 @@ class Bug {
 
     get #thoraxModel() {
         const model = this.#model;
-        mat4.translate(model, model, [0.0, 0.0, 0.25]);
+        mat4.translate(model, model, [0.0, 0.0, Bug.#ANT.height]);
         return model;
     }
 
     get #headModel() {
         const model = this.#thoraxModel;
-        mat4.translate(model, model, [0.1, 0.0, 0.0]);
-        mat4.rotateY(model, model, Math.PI / 12);
-        mat4.translate(model, model, [0.1, 0.0, 0.0]);
+        mat4.translate(model, model, [Bug.#ANT.thorax.x, 0.0, 0.0]);
+        mat4.rotateY(model, model, Bug.#ANT.head.angle);
+        mat4.translate(model, model, [Bug.#ANT.head.x, 0.0, 0.0]);
         return model;
     }
 
     get #abdomenModel() {
         const model = this.#thoraxModel;
-        mat4.translate(model, model, [-0.1, 0.0, 0.0]);
-        mat4.rotateY(model, model, -Math.PI / 12);
-        mat4.translate(model, model, [-0.2, 0.0, 0.0]);
+        mat4.translate(model, model, [-Bug.#ANT.thorax.x, 0.0, 0.0]);
+        mat4.rotateY(model, model, Bug.#ANT.abdomen.angle);
+        mat4.translate(model, model, [-Bug.#ANT.abdomen.x, 0.0, 0.0]);
         return model;
     }
 
     #getFemurModel(i) {
         const model = this.#thoraxModel;
-        mat4.rotateZ(model, model, i * Math.PI / 3);
-        mat4.rotateX(model, model, Math.PI / 2 - Math.PI / 12);
+        mat4.rotateZ(model, model, Bug.#ANT.femur.angles[i]);
+        mat4.rotateX(model, model, Bug.#ANT.femur.angle);
         return model;
     }
 
     #getTibiaModel(i) {
         const model = this.#getFemurModel(i);
-        mat4.translate(model, model, [0.0, 0.01, 0.25 - 0.01]);
-        mat4.rotateX(model, model, Math.PI / 2);
+        mat4.translate(model, model, [0.0, Bug.#ANT.tibia.radius, Bug.#ANT.femur.height - Bug.#ANT.femur.radius]);
+        mat4.rotateX(model, model, Bug.#ANT.tibia.angle);
         return model;
     }
 }
