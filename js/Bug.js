@@ -9,24 +9,26 @@ class Bug {
         femur: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, verticalAngle: 7 * Math.PI / 12,
                 horizontalAngles: [Math.PI / 4, 3 * Math.PI / 4, 0, Math.PI, -Math.PI / 4, 5 * Math.PI / 4]},
         tibia: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: Math.PI / 6},
-        height: 0.15
+        height: 0.15,
+        color: [1.0, 1.0, 0.0, 1.0]
     };
     static #ATTRIBUTE_NORMAL = 'normal';
     static #ATTRIBUTE_POSITION = 'position';
     static #SHADER_FRAGMENT = './glsl/bug.frag';
     static #SHADER_VERTEX = './glsl/bug.vert';
-    static #UBO_LIGHT = 'light';
+    static #UBO_COLOR_LIGHT = 'colorLight';
     static #UBO_PROJECTION_VIEW_MODEL = 'projectionViewModel';
-    static #UNIFORM_AMBIENT = 'ambient';
-    static #UNIFORM_DIRECTIONAL_COLOR = 'directional.color';
-    static #UNIFORM_DIRECTIONAL_DIRECTION = 'directional.direction';
+    static #UNIFORM_COLOR = 'color';
+    static #UNIFORM_LIGHT_AMBIENT = 'light.ambient';
+    static #UNIFORM_LIGHT_DIRECTIONAL_COLOR = 'light.directional.color';
+    static #UNIFORM_LIGHT_DIRECTIONAL_DIRECTION = 'light.directional.direction';
     static #UNIFORM_MODEL = 'model';
     static #UNIFORM_PROJECTION = 'projection';
     static #UNIFORM_TERRAINS = 'terrains';
     static #UNIFORM_VIEW = 'view';
     static UBOS = {[Bug.#UBO_PROJECTION_VIEW_MODEL]: [Bug.#UNIFORM_PROJECTION, Bug.#UNIFORM_VIEW, Bug.#UNIFORM_MODEL],
-            [Bug.#UBO_LIGHT]: [Bug.#UNIFORM_AMBIENT, Bug.#UNIFORM_DIRECTIONAL_COLOR, Bug.#UNIFORM_DIRECTIONAL_DIRECTION]
-            };
+            [Bug.#UBO_COLOR_LIGHT]: [Bug.#UNIFORM_COLOR, Bug.#UNIFORM_LIGHT_AMBIENT,
+            Bug.#UNIFORM_LIGHT_DIRECTIONAL_COLOR, Bug.#UNIFORM_LIGHT_DIRECTIONAL_DIRECTION]};
     static #VELOCITY = 1.0;
 
     #gl;
@@ -117,9 +119,10 @@ class Bug {
 
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
-        this.#ubos[Bug.#UBO_LIGHT].setUniforms({[Bug.#UNIFORM_AMBIENT]: new Float32Array(light.ambient),
-            [Bug.#UNIFORM_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
-            [Bug.#UNIFORM_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
+        this.#ubos[Bug.#UBO_COLOR_LIGHT].setUniforms({[Bug.#UNIFORM_COLOR]: new Float32Array(Bug.#ANT.color),
+            [Bug.#UNIFORM_LIGHT_AMBIENT]: new Float32Array(light.ambient),
+            [Bug.#UNIFORM_LIGHT_DIRECTIONAL_COLOR]: new Float32Array(light.directional.color),
+            [Bug.#UNIFORM_LIGHT_DIRECTIONAL_DIRECTION]: new Float32Array(light.directional.direction)});
         this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_VIEW]: view});
         this.#gl.bindVertexArray(this.#thorax.vao.vao);
         this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#thoraxModel});
