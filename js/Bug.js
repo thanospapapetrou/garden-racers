@@ -6,8 +6,8 @@ class Bug {
         thorax: {x: 0.1, y: 0.05, z: 0.05, sectors: 8, stacks: 4},
         head: {x: 0.075, y: 0.1, z: 0.075, sectors: 8, stacks: 4, angle: Math.PI / 12},
         abdomen: {x: 0.15, y: 0.1, z: 0.1, sectors: 8, stacks: 4, angle: -Math.PI / 12},
-        femur: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: 7 * Math.PI / 12,
-                angles: [Math.PI / 4, 3 * Math.PI / 4, 0, Math.PI, -Math.PI / 4, 5 * Math.PI / 4]},
+        femur: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, verticalAngle: 7 * Math.PI / 12,
+                horizontalAngles: [Math.PI / 4, 3 * Math.PI / 4, 0, Math.PI, -Math.PI / 4, 5 * Math.PI / 4]},
         tibia: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: Math.PI / 6},
         height: 0.15
     };
@@ -131,12 +131,12 @@ class Bug {
         this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#abdomenModel});
         this.#gl.drawElements(this.#gl.TRIANGLES, this.#abdomen.count, this.#gl.UNSIGNED_INT, 0);
         this.#gl.bindVertexArray(this.#femur.vao.vao);
-        for (let i = 0; i < Bug.#ANT.femur.angles.length; i ++) { // TODO
+        for (let i = 0; i < Bug.#ANT.femur.horizontalAngles.length; i ++) {
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getFemurModel(i)});
             this.#gl.drawElements(this.#gl.TRIANGLES, this.#femur.count, this.#gl.UNSIGNED_INT, 0);
         }
         this.#gl.bindVertexArray(this.#tibia.vao.vao);
-        for (let i = 0; i < Bug.#ANT.femur.angles.length; i ++) { // TODO
+        for (let i = 0; i < Bug.#ANT.femur.horizontalAngles.length; i ++) {
             this.#ubos[Bug.#UBO_PROJECTION_VIEW_MODEL].setUniforms({[Bug.#UNIFORM_MODEL]: this.#getTibiaModel(i)});
             this.#gl.drawElements(this.#gl.TRIANGLES, this.#tibia.count, this.#gl.UNSIGNED_INT, 0);
         }
@@ -199,8 +199,8 @@ class Bug {
 
     #getFemurModel(i) {
         const model = this.#thoraxModel;
-        mat4.rotateZ(model, model, Bug.#ANT.femur.angles[i]);
-        mat4.rotateX(model, model, Bug.#ANT.femur.angle);
+        mat4.rotateZ(model, model, Bug.#ANT.femur.horizontalAngles[i]);
+        mat4.rotateX(model, model, Bug.#ANT.femur.verticalAngle);
         return model;
     }
 
