@@ -6,9 +6,9 @@ class Bug {
         thorax: {x: 0.1, y: 0.05, z: 0.05, sectors: 8, stacks: 4},
         head: {x: 0.075, y: 0.1, z: 0.075, sectors: 8, stacks: 4, angle: Math.PI / 12},
         abdomen: {x: 0.15, y: 0.1, z: 0.1, sectors: 8, stacks: 4, angle: -Math.PI / 12},
-        femur: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, verticalAngle: 7 * Math.PI / 12,
+        femur: {radius: 0.01, height: 0.13247448713, sectors: 4, stacks: 2, verticalAngle: 7 * Math.PI / 12,
                 horizontalAngles: [Math.PI / 4, 3 * Math.PI / 4, 0, Math.PI, -Math.PI / 4, 5 * Math.PI / 4]},
-        tibia: {radius: 0.01, height: 0.3, sectors: 4, stacks: 2, angle: Math.PI / 6},
+        tibia: {radius: 0.01, height: 0.13247448713, sectors: 4, stacks: 2, angle: Math.PI / 3},
         height: 0.15,
         color: [1.0, 1.0, 0.0, 1.0]
     };
