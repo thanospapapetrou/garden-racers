@@ -209,8 +209,9 @@ class Bug {
 
     #getTibiaModel(i) {
         const model = this.#getFemurModel(i);
-        mat4.translate(model, model, [0.0, Bug.#ANT.tibia.radius, Bug.#ANT.femur.height - Bug.#ANT.femur.radius]);
+        mat4.translate(model, model, [0.0, 0.0, Bug.#ANT.femur.height - Bug.#ANT.femur.radius]);
         mat4.rotateX(model, model, Bug.#ANT.tibia.angle);
+        mat4.translate(model, model, [0.0, 0.0, -Bug.#ANT.tibia.radius]);
         return model;
     }
 }
