@@ -103,6 +103,54 @@ class Garden {
                 + this.#getAltitude(Math.ceil(latitude), Math.ceil(longitude))) / 4;
     }
 
+    getSlopeX(latitude, longitude) {
+        const lat = 2 * Math.min(Math.floor(latitude), this.#garden.latitude - 1) + 1;
+        const lng = 2 * Math.min(Math.floor(longitude), this.#garden.longitude - 1) + 1;
+        const latCenter = lat * Garden.#STEP_LATTICE;
+        const lngCenter = lng * Garden.#STEP_LATTICE;
+        const checkN = latitude > latCenter;
+        const checkE = longitude > lngCenter;
+        const checkNW = latitude > (longitude + latCenter - lngCenter);
+        const checkNE = latitude > (-longitude + latCenter + lngCenter);
+        const positions = [];
+        for (let direction of [null, ...Object.values(Direction)]) {
+            positions[direction] = this.#getPosition(lat + (direction?.lat ?? 0.0), lng + (direction?.lng ?? 0.0));
+        }
+        if (checkN && checkE && checkNW) {
+            // north northeast
+            return (positions[Direction.NE].z - positions[Direction.N].z)
+                    / (positions[Direction.NE].x - positions[Direction.N].x);
+        } else if (checkN && checkE && (!checkNW)) {
+            // northeast east
+            return (positions[Direction.E].z - positions[null].z) / (positions[Direction.E].x - positions[null].x);
+        } else if (checkN && (!checkE) && checkNE) {
+            // northwest - north
+            return (positions[Direction.N].z - positions[Direction.NW].z)
+                    / (positions[Direction.N].x - positions[Direction.NW].x);
+        } else if (checkN && (!checkE) && (!checkNE)) {
+            // west - northwest
+            return (positions[null].z - positions[Direction.W].z)
+                    / (positions[null].x - positions[Direction.W].x);
+        } else if ((!checkN) && checkE && checkNE) {
+            // east - southeast
+            return (positions[Direction.E].z - positions[null].z)
+                    / (positions[Direction.E].x - positions[null].x);
+        } else if ((!checkN) && checkE && (!checkNE)) {
+            // southeast - south
+            return (positions[Direction.SE].z - positions[Direction.S].z)
+                    / (positions[Direction.SE].x - positions[Direction.S].x);
+        } else if ((!checkN) && (!checkE) && checkNW) {
+            // southwest - west
+            return (positions[null].z - positions[Direction.W].z)
+                    / (positions[null].x - positions[Direction.W].x);
+        } else if ((!checkN) && (!checkE) && (!checkNW)) {
+            // south - southwest
+            return (positions[Direction.S].z - positions[Direction.SW].z)
+                    / (positions[Direction.S].x - positions[Direction.SW].x);
+        }
+        return 0.0;
+    }
+
     render(view, light) {
         this.#gl.useProgram(this.#program.program);
         this.#ubos[Garden.#UBO_PROJECTION_VIEW].setUniforms({[Garden.#UNIFORM_VIEW]: view});

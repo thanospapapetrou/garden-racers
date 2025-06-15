@@ -174,6 +174,7 @@ class Bug {
     get #model() {
         const model = mat4.create();
         mat4.translate(model, model, [this.#x, this.#y, this.#z]);
+        mat4.rotateY(model, model, -Math.atan(this.#garden.getSlopeX(this.#y, this.#x)));
         mat4.rotateZ(model, model, this.#yaw);
         return model;
     }
