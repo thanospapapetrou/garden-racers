@@ -106,74 +106,25 @@ class Garden {
     getSlopeX(latitude, longitude) {
         const lat = 2 * Math.floor(latitude) + 1;
         const lng = 2 * Math.floor(longitude) + 1;
-        console.log(latitude + ' ' + longitude + ' ' + lat + ' ' + lng);
         const positions = {};
         positions[null] = this.#getPosition(lat, lng);
-        const checkN = latitude > positions[null].y;
-        const checkE = longitude > positions[null].x;
-        const checkNW = latitude > (longitude + positions[null].y - positions[null].x);
-        const checkNE = latitude > (-longitude + positions[null].y + positions[null].x);
+        const angle = Math.atan((latitude - positions[null].y) / (longitude - positions[null].x));
         for (let direction of Object.keys(Direction)) {
             positions[direction] = this.#getPosition(lat + Direction[direction].lat, lng + Direction[direction].lng);
         }
-        let slope = 0.0;
-        if (checkN && checkE && checkNW) {
-            // north northeast
-            slope = (positions.NE.z - positions.N.z)
-                    / (positions.NE.x - positions.N.x);
-            if (isNaN(slope)) {
-                console.log('N - NE is not working!');
-            }
-        } else if (checkN && checkE && (!checkNW)) {
-            // northeast east
-            slope = (positions.E.z - positions[null].z) / (positions.E.x - positions[null].x);
-            if (isNaN(slope)) {
-                console.log('NE - E is not working!');
-            }
-        } else if (checkN && (!checkE) && checkNE) {
-            // northwest - north
-            slope = (positions.N.z - positions.NW.z)
-                    / (positions.N.x - positions.NW.x);
-            if (isNaN(slope)) {
-                console.log('NW - N is not working!');
-            }
-        } else if (checkN && (!checkE) && (!checkNE)) {
-            // west - northwest
-            slope = (positions[null].z - positions.W.z)
-                    / (positions[null].x - positions.W.x);
-            if (isNaN(slope)) {
-                console.log('W - NW is not working!');
-            }
-        } else if ((!checkN) && checkE && checkNE) {
-            // east - southeast
-            slope = (positions.E.z - positions[null].z)
-                    / (positions.E.x - positions[null].x);
-            if (isNaN(slope)) {
-                console.log('E - SE is not working!');
-            }
-        } else if ((!checkN) && checkE && (!checkNE)) {
-            // southeast - south
-            slope = (positions.SE.z - positions.S.z)
-                    / (positions.SE.x - positions.S.x);
-            if (isNaN(slope)) {
-                console.log('SE - S is not working!');
-            }
-        } else if ((!checkN) && (!checkE) && checkNW) {
-            // southwest - west
-            slope = (positions[null].z - positions.W.z)
-                    / (positions[null].x - positions.W.x);
-            if (isNaN(slope)) {
-                console.log('SW - W is not working!');
-            }
-        } else if ((!checkN) && (!checkE) && (!checkNW)) {
-            // south - southwest
-            slope = (positions.S.z - positions.SW.z)
-                    / (positions.S.x - positions.SW.x);
-            if (isNaN(slope)) {
-                console.log('S - SW is not working!');
-            }
+        if ((Math.PI / 4 <= angle) && (angle < Math.PI / 2) && (longitude >= positions[null].x)) {
+            return (positions.NE.z - positions.N.z) / (positions.NE.x - positions.N.x);
+        } else if ((-Math.PI / 4 <= angle) && (angle < Math.PI / 4) && (longitude >= positions[null].x)) {
+            return (positions.E.z - positions[null].z) / (positions.E.x - positions[null].x);
+        } else if ((-Math.PI / 2 <= angle) && (angle < -Math.PI / 4) && (longitude >= positions[null].x)) {
+            return (positions.SE.z - positions.S.z) / (positions.SE.x - positions.S.x);
+        } else if ((Math.PI / 4 <= angle) && (angle < Math.PI / 2) && (longitude < positions[null].x)) {
+            return (positions.S.z - positions.SW.z) / (positions.S.x - positions.SW.x);
+        } else if ((-Math.PI / 4 <= angle) && (angle < Math.PI / 4) && (longitude < positions[null].x)) {
+            return (positions[null].z - positions.W.z) / (positions[null].x - positions.W.x);
+        } else if ((-Math.PI / 2 <= angle) && (angle < -Math.PI / 4) && (longitude < positions[null].x)) {
+            return (positions.N.z - positions.NW.z) / (positions.N.x - positions.NW.x);
         }
-        return slope;
     }
 
     render(view, light) {
